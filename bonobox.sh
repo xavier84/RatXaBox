@@ -491,6 +491,8 @@ echo "" ; set "162" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${C
 git clone https://github.com/Jedediah04/TARDIStart.git "$NGINXWEB"/tardistart
 cd "$NGINXWEB"/tardistart
 bower install --allow-root
+chown -R "$WDATA" "$NGINXWEB"/tartdistart
+chmod 755 "$NGINXWEB"/tartdistart
 
 #install sickrage
 PORTSR=20001
