@@ -1,7 +1,7 @@
 # Script d'installation ruTorrent / Nginx
 
 ![logo](https://raw.github.com/exrat/rutorrent-bonobox/master/files/bonobox.png)
-
+salut
 * Multi-utilisateurs & Multilingue automatique en fonction de l'installation du serveur
 * Français, English, German, Pусский,  Español, Português
 * Nécessite Debian 7 ou 8 (32/64 bits) & un serveur fraîchement installé
@@ -32,8 +32,8 @@ apt-get update && apt-get upgrade -y
 apt-get install git-core -y
 
 cd /tmp
-git clone https://github.com/xavier84/RatXaBox ratxabox
-cd ratxabox
+git clone https://github.com/xavier84/rutorrent-bonobox
+cd rutorrent-bonobox
 chmod a+x bonobox.sh && ./bonobox.sh
 ```
 ![caps1](https://raw.github.com/exrat/rutorrent-bonobox/master/files/caps_script01.png)

@@ -99,6 +99,10 @@ done
 echo "" ; set "128" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 read -r SERVFTP
 
+#choix de streming
+echo "" ; set "310" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
+read -r STREM
+
 # récupération 5% root sur /home ou /home/user si présent
 FSHOME=$(df -h | grep /home | cut -c 6-9)
 if [ "$FSHOME" = "" ]; then
@@ -159,7 +163,7 @@ FONCSERVICE restart bind9
 apt-get update && apt-get upgrade -y
 echo "" ; set "132" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
-apt-get install -y htop openssl apt-utils python python3-lxml python3-openssl build-essential  libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev vim nano ccze screen subversion apache2-utils curl "$PHPNAME" "$PHPNAME"-cli "$PHPNAME"-fpm "$PHPNAME"-curl "$PHPNAME"-geoip unrar rar zip buildtorrent fail2ban ntp ntpdate munin ffmpeg aptitude dnsutils irssi  libarchive-zip-perl  libjson-perl libjson-xs-perl libxml-libxslt-perl nginx
+apt-get install -y htop openssl apt-utils python python-cheetah python3-lxml python3-openssl build-essential  libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev vim nano ccze screen subversion apache2-utils curl "$PHPNAME" "$PHPNAME"-cli "$PHPNAME"-fpm "$PHPNAME"-curl "$PHPNAME"-geoip unrar rar zip buildtorrent fail2ban ntp ntpdate munin ffmpeg aptitude dnsutils irssi  libarchive-zip-perl  libjson-perl libjson-xs-perl libxml-libxslt-perl nginx
 
 #if [[ $VERSION =~ 8. ]]; then
 #apt-get install -y "$PHPNAME"-xml "$PHPNAME"-mbstring
@@ -486,82 +490,6 @@ chown -R "$WDATA" "$SBMCONFUSER"
 chown -R "$WDATA" "$SBM"/public/themes/default/template/header.html
 echo "" ; set "162" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
-
-#install tardistart
-git clone https://github.com/Jedediah04/TARDIStart.git "$NGINXWEB"/tardistart
-cd "$NGINXWEB"/tardistart
-bower install --allow-root
-chown -R "$WDATA" "$NGINXWEB"/tardistart
-chmod 755 "$NGINXWEB"/tardistart
-
-#install sickrage
-PORTSR=20001
-
-#install
-apt-get install git-core python python-cheetah -y
-git clone https://github.com/SickRage/SickRage /opt/sickrage
-cd /opt/sickrage
-chown -R "$USER":"$USER" /opt/sickrage
-
-#compteur
-echo "$PORTSR" >> "$SICKRAGE"/histo.log
-
-#config
-cp -f "$BONOBOX"/files/sickrage/sickrage.init /etc/init.d/sickrage_"$USER"
-chmod +x /etc/init.d/sickrage_"$USER"
-sed -i -e 's/xataz/'$USER'/g' /etc/init.d/sickrage_"$USER"
-sed -i -e 's/SR_USER=/SR_USER='$USER'/g' /etc/init.d/sickrage_"$USER"
-/etc/init.d/sickrage_"$USER" start && /etc/init.d/sickrage_"$USER" stop
-sleep 1
-sed -i -e 's/web_root = ""/web_root = \/sickrage/g' /opt/sickrage/data/"$USER"/config.ini
-sed -i -e 's/web_port = 8081/web_port = '$PORTSR'/g' /opt/sickrage/data/"$USER"/config.ini
-sed -i -e 's/torrent_dir = ""/torrent_dir = \/home\/'$USER'\/watch\//g' /opt/sickrage/data/"$USER"/config.ini
-FONCSCRIPTSR "$USER"
-FONCSERVICE start sickrage_"$USER"
-
-#config nginx sickrage
-cp -f "$BONOBOX"/files/sickrage/sickrage.vhost "$NGINXCONFD"/sickrage.conf
-sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/sickrage.conf
-sed -i "s|@PORTSR@|$PORTSR|g;" "$NGINXCONFD"/sickrage.conf
-
-#port couchpotato
-PORTCH=5051
-
-#install couchpotato
-git clone https://github.com/CouchPotato/CouchPotatoServer.git /opt/couchpotato
-cd "$COUCHPOTATO"
-
-#compteur port
-echo "$PORTCH" >> "$COUCHPOTATO"/histo.log
-
-#conf systemed 
-#cp -f "$COUCHPOTATO"/init/couchpotato.service /etc/systemd/system/couchpotato_"$USER".service
-#sed -i -e 's/couchpotato/'$USER'/g' /etc/systemd/system/couchpotato_"$USER".service
-#systemctl daemon-reload
-
-#config couch
-cp -f "$COUCHPOTATO"/init/ubuntu /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/CONFIG=\/etc\/default\/couchpotato/#CONFIG=\/etc\/default\/couchpotato/g' /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/# Provides:          couchpotato/# Provides:          '$USER'/g' /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/CP_USER:=couchpotato/CP_USER:='$USER'/g' /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/CP_DATA:=\/var\/opt\/couchpotato/CP_DATA:=\/opt\/couchpotato\/data\/'$USER'/g' /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/CP_PIDFILE:=\/var\/run\/couchpotato\/couchpotato.pid/CP_PIDFILE:=\/opt\/couchpotato\/data\/'$USER'\/couchpotato.pid/g' /etc/init.d/couchpotato_"$USER"
-chmod +x /etc/init.d/couchpotato_"$USER"
-update-rc.d couchpotato_"$USER" defaults
-/etc/init.d/couchpotato_"$USER" start && /etc/init.d/couchpotato_"$USER" stop
-sleep 1
-
-#config de user couch
-chmod -Rf 755  "$COUCHPOTATO"/data/
-cp -f "$BONOBOX"/files/couchpotato/settings.conf /opt/couchpotato/data/"$USER"/settings.conf
-sed -i "s|@USER@|$USER|g;" /opt/couchpotato/data/"$USER"/settings.conf
-sed -i "s|@PORTCH@|$PORTCH|g;" /opt/couchpotato/data/"$USER"/settings.conf
-
-#config nginx couchpotato
-cp -f "$BONOBOX"/files/couchpotato/couchpotato.vhost "$NGINXCONFD"/couchpotato.conf
-sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
-sed -i "s|@PORTCH@|$PORTCH|g;" "$NGINXCONFD"/couchpotato.conf
-
 # logrotate
 cp -f "$FILES"/nginx/logrotate /etc/logrotate.d/nginx
 
@@ -721,6 +649,112 @@ echo "userlog">> "$RUTORRENT"/histo.log
 sed -i "s/maillog/$EMAIL/g;" "$RUTORRENT"/histo.log
 sed -i "s/userlog/$USER:5001/g;" "$RUTORRENT"/histo.log
 
+#install tardistart
+git clone https://github.com/Jedediah04/TARDIStart.git "$NGINXWEB"/tardistart
+cd "$NGINXWEB"/tardistart || exit
+bower install --allow-root
+chown -R "$WDATA" "$NGINXWEB"/tardistart
+chmod 755 "$NGINXWEB"/tardistart
+
+#install sickrage
+PORT=20001
+
+#install
+git clone https://github.com/SickRage/SickRage "$SICKRAGE"
+cd "$SICKRAGE" || exit
+chown -R "$USER":"$USER" "$SICKRAGE"
+
+#compteur
+echo "$PORT" >> "$SICKRAGE"/histo.log
+
+#config
+cp -f "$BONOBOX"/files/sickrage/sickrage.init /etc/init.d/sickrage-"$USER"
+chmod +x /etc/init.d/sickrage-"$USER"
+sed -i -e 's/xataz/'$USER'/g' /etc/init.d/sickrage-"$USER"
+sed -i -e 's/SR_USER=/SR_USER='$USER'/g' /etc/init.d/sickrage-"$USER"
+/etc/init.d/sickrage-"$USER" start && /etc/init.d/sickrage-"$USER" stop
+sleep 1
+sed -i -e 's/web_root = ""/web_root = \/sickrage/g' "$SICKRAGE"/data/"$USER"/config.ini
+sed -i -e 's/web_port = 8081/web_port = '$PORT'/g' "$SICKRAGE"/data/"$USER"/config.ini
+sed -i -e 's/torrent_dir = ""/torrent_dir = \/home\/'$USER'\/watch\//g' "$SICKRAGE"/data/"$USER"/config.ini
+FONCSCRIPT "$USER" sickrage
+FONCSERVICE start sickrage-"$USER"
+
+#config nginx sickrage
+cp -f "$BONOBOX"/files/sickrage/sickrage.vhost "$NGINXCONFD"/sickrage.conf
+sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/sickrage.conf
+sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/sickrage.conf
+
+#port couchpotato
+PORT=5051
+
+#install couchpotato
+git clone https://github.com/CouchPotato/CouchPotatoServer.git "$COUCHPOTATO"
+cd "$COUCHPOTATO" || exit
+
+#compteur port
+echo "$PORT" >> "$COUCHPOTATO"/histo.log
+
+#conf systemed 
+#cp -f "$COUCHPOTATO"/init/couchpotato.service /etc/systemd/system/couchpotato-"$USER".service
+#sed -i -e 's/couchpotato/'$USER'/g' /etc/systemd/system/couchpotato-"$USER".service
+#systemctl daemon-reload
+
+#config couch
+cp -f "$COUCHPOTATO"/init/ubuntu /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/CONFIG=\/etc\/default\/couchpotato/#CONFIG=\/etc\/default\/couchpotato/g' /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/# Provides:          couchpotato/# Provides:          '$USER'/g' /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/CP_USER:=couchpotato/CP_USER:='$USER'/g' /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/CP_DATA:=\/var\/opt\/couchpotato/CP_DATA:=\/opt\/couchpotato\/data\/'$USER'/g' /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/CP_PIDFILE:=\/var\/run\/couchpotato\/couchpotato.pid/CP_PIDFILE:=\/opt\/couchpotato\/data\/'$USER'\/couchpotato.pid/g' /etc/init.d/couchpotato-"$USER"
+chmod +x /etc/init.d/couchpotato-"$USER"
+FONCSCRIPT "$USER" couchpotato
+/etc/init.d/couchpotato-"$USER" start && /etc/init.d/couchpotato-"$USER" stop
+sleep 1
+
+#config de user couch
+chmod -Rf 755  "$COUCHPOTATO"/data/
+cp -f "$BONOBOX"/files/couchpotato/settings.conf "$COUCHPOTATO"/data/"$USER"/settings.conf
+sed -i "s|@USER@|$USER|g;" "$COUCHPOTATO"/data/"$USER"/settings.conf
+sed -i "s|@PORT@|$PORT|g;" "$COUCHPOTATO"/data/"$USER"/settings.conf
+
+#config nginx couchpotato
+cp -f "$BONOBOX"/files/couchpotato/couchpotato.vhost "$NGINXCONFD"/couchpotato.conf
+sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
+sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/couchpotato.conf
+
+#plex ou emby
+case $STREM  in
+		1)
+			echo plex
+			if [[ $VERSION =~ 7. ]]; then
+				echo "deb http://shell.ninthgate.se/packages/debian wheezy main" | tee -a /etc/apt/sources.list.d/plexmediaserver.list
+			elif [[ $VERSION =~ 8. ]]; then
+				echo "deb http://shell.ninthgate.se/packages/debian jessie main" | tee -a /etc/apt/sources.list.d/plexmediaserver.list
+			fi
+			curl http://shell.ninthgate.se/packages/shell.ninthgate.se.gpg.key | apt-key add -
+			aptitude update && aptitude install -y plexmediaserver && service plexmediaserver start
+			;;
+		2)
+			aptitude install -y  mono-xsp4
+			wget http://download.opensuse.org/repositories/home:emby/Debian_8.0/Release.key
+			apt-key add - < Release.key
+			apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+			
+			echo "deb http://download.mono-project.com/repo/debian wheezy main" | tee /etc/apt/sources.list.d/mono-xamarin.list
+			echo "deb http://download.mono-project.com/repo/debian wheezy-apache24-compat main" | tee -a /etc/apt/sources.list.d/mono-xamarin.list
+			echo "deb http://download.mono-project.com/repo/debian wheezy-libjpeg62-compat main" | tee -a /etc/apt/sources.list.d/mono-xamarin.list
+			echo 'deb http://download.opensuse.org/repositories/home:/emby/Debian_8.0/ /' >> /etc/apt/sources.list.d/emby-server.list
+			aptitude update
+			aptitude install -y mono-complete
+			aptitude install -y emby-server
+			;;
+		*)
+			echo rien
+			;;
+esac
+
+
 set "180" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 
 echo "" ; set "182" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}"
@@ -813,7 +847,7 @@ EMAIL=$(sed -n "1 p" "$RUTORRENT"/histo.log)
 su "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session '
 
 # calcul port
-FONCPORT
+FONCPORT "$RUTORRENT" 5001
 
 # configuration munin
 FONCMUNIN "$USER" "$PORT"
@@ -824,72 +858,6 @@ FONCTORRENTRC "$USER" "$PORT" "$RUTORRENT"
 # config user rutorrent.conf
 sed -i '$d' "$NGINXENABLE"/rutorrent.conf
 FONCRTCONF "$USERMAJ"  "$PORT" "$USER"
-
-# calcul port sickrage
-FONCPORTSR
-#compteur
-echo "$PORTSR" >> "$SICKRAGE"/histo.log
-
-#config
-cp -f "$BONOBOX"/files/sickrage/sickrage.init /etc/init.d/sickrage_"$USER"
-chmod +x /etc/init.d/sickrage_"$USER"
-sed -i -e 's/xataz/'$USER'/g' /etc/init.d/sickrage_"$USER"
-sed -i -e 's/SR_USER=/SR_USER='$USER'/g' /etc/init.d/sickrage_"$USER"
-/etc/init.d/sickrage_"$USER" start && /etc/init.d/sickrage_"$USER" stop
-sleep 1
-sed -i -e 's/web_root = ""/web_root = \/sickrage/g' /opt/sickrage/data/"$USER"/config.ini
-sed -i -e 's/web_port = 8081/web_port = '$PORTSR'/g' /opt/sickrage/data/"$USER"/config.ini
-sed -i -e 's/torrent_dir = ""/torrent_dir = \/home\/'$USER'\/watch\//g' /opt/sickrage/data/"$USER"/config.ini
-FONCSCRIPTSR "$USER"
-FONCSERVICE start sickrage_"$USER"
-
-#config nginx sickrage
-sed -i '$d' "$NGINXCONFD"/sickrage.conf
-echo "                if (\$remote_user = "@USER@") {
-                        proxy_pass http://127.0.0.1:@PORTSR@;
-                        break;
-               }
-      }" >> "$NGINXCONFD"/sickrage.conf
-	
-sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/sickrage.conf
-sed -i "s|@PORTSR@|$PORTSR|g;" "$NGINXCONFD"/sickrage.conf
-sleep 1
-
-# calcul port couchpotato
-FONCPORTCH
-#compteur
-echo "$PORTCH" >> "$COUCHPOTATO"/histo.log
-
-#config couch
-cp -f "$COUCHPOTATO"/init/ubuntu /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/CONFIG=\/etc\/default\/couchpotato/#CONFIG=\/etc\/default\/couchpotato/g' /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/# Provides:          couchpotato/# Provides:          '$USER'/g' /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/CP_USER:=couchpotato/CP_USER:='$USER'/g' /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/CP_DATA:=\/var\/opt\/couchpotato/CP_DATA:=\/opt\/couchpotato\/data\/'$USER'/g' /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/CP_PIDFILE:=\/var\/run\/couchpotato\/couchpotato.pid/CP_PIDFILE:=\/opt\/couchpotato\/data\/'$USER'\/couchpotato.pid/g' /etc/init.d/couchpotato_"$USER"
-chmod +x /etc/init.d/couchpotato_"$USER"
-update-rc.d couchpotato_"$USER" defaults
-/etc/init.d/couchpotato_"$USER" start && /etc/init.d/couchpotato_"$USER" stop
-sleep 1
-
-#config de user couch
-chmod -Rf 755  "$COUCHPOTATO"/data/
-cp -f "$BONOBOX"/files/couchpotato/settings.conf /opt/couchpotato/data/"$USER"/settings.conf
-sed -i "s|@USER@|$USER|g;" /opt/couchpotato/data/"$USER"/settings.conf
-sed -i "s|@PORTCH@|$PORTCH|g;" /opt/couchpotato/data/"$USER"/settings.conf
-
-#config nginx couchpotato
-sed -i '$d' "$NGINXCONFD"/couchpotato.conf
-echo "                if (\$remote_user = "@USER@") {
-                        proxy_pass http://127.0.0.1:@PORTCH@;
-                        break;
-               }
-      }" >> "$NGINXCONFD"/couchpotato.conf
-	
-sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
-sed -i "s|@PORTCH@|$PORTCH|g;" "$NGINXCONFD"/couchpotato.conf
-sleep 1
-
 
 # logserver user config
 sed -i '$d' "$SCRIPT"/logserver.sh
@@ -941,11 +909,81 @@ FONCHTPASSWD "$USER"
 
 # configuration page index munin
 FONCGRAPH "$USER"
-FONCSERVICE restart nginx
 
 # log users
 echo "userlog">> "$RUTORRENT"/histo.log
 sed -i "s/userlog/$USER:$PORT/g;" "$RUTORRENT"/histo.log
+
+# calcul port sickrage
+FONCPORT "$SICKRAGE" 20001
+
+#compteur
+echo "$PORT" >> "$SICKRAGE"/histo.log
+
+#config
+cp -f "$BONOBOX"/files/sickrage/sickrage.init /etc/init.d/sickrage-"$USER"
+chmod +x /etc/init.d/sickrage-"$USER"
+sed -i -e 's/xataz/'$USER'/g' /etc/init.d/sickrage-"$USER"
+sed -i -e 's/SR_USER=/SR_USER='$USER'/g' /etc/init.d/sickrage-"$USER"
+/etc/init.d/sickrage-"$USER" start && /etc/init.d/sickrage-"$USER" stop
+sleep 1
+sed -i -e 's/web_root = ""/web_root = \/sickrage/g' "$SICKRAGE"/data/"$USER"/config.ini
+sed -i -e 's/web_port = 8081/web_port = '$PORT'/g' "$SICKRAGE"/data/"$USER"/config.ini
+sed -i -e 's/torrent_dir = ""/torrent_dir = \/home\/'$USER'\/watch\//g' "$SICKRAGE"/data/"$USER"/config.ini
+FONCSCRIPT "$USER" sickrage
+FONCSERVICE start sickrage-"$USER"
+
+#config nginx sickrage
+sed -i '$d' "$NGINXCONFD"/sickrage.conf
+echo "                if (\$remote_user = "@USER@") {
+                        proxy_pass http://127.0.0.1:@PORT@;
+                        break;
+               }
+      }" >> "$NGINXCONFD"/sickrage.conf
+	
+sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/sickrage.conf
+sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/sickrage.conf
+sleep 1
+
+# calcul port couchpotato
+FONCPORT "$COUCHPOTATO" 5051
+
+#compteur
+echo "$PORT" >> "$COUCHPOTATO"/histo.log
+
+#config couch
+cp -f "$COUCHPOTATO"/init/ubuntu /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/CONFIG=\/etc\/default\/couchpotato/#CONFIG=\/etc\/default\/couchpotato/g' /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/# Provides:          couchpotato/# Provides:          '$USER'/g' /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/CP_USER:=couchpotato/CP_USER:='$USER'/g' /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/CP_DATA:=\/var\/opt\/couchpotato/CP_DATA:=\/opt\/couchpotato\/data\/'$USER'/g' /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/CP_PIDFILE:=\/var\/run\/couchpotato\/couchpotato.pid/CP_PIDFILE:=\/opt\/couchpotato\/data\/'$USER'\/couchpotato.pid/g' /etc/init.d/couchpotato-"$USER"
+chmod +x /etc/init.d/couchpotato-"$USER"
+FONCSCRIPT "$USER" couchpotato
+/etc/init.d/couchpotato-"$USER" start && /etc/init.d/couchpotato-"$USER" stop
+sleep 1
+
+#config de user couch
+chmod -Rf 755  "$COUCHPOTATO"/data/
+cp -f "$BONOBOX"/files/couchpotato/settings.conf "$COUCHPOTATO"/data/"$USER"/settings.conf
+sed -i "s|@USER@|$USER|g;" "$COUCHPOTATO"/data/"$USER"/settings.conf
+sed -i "s|@PORT@|$PORT|g;" "$COUCHPOTATO"/data/"$USER"/settings.conf
+
+#config nginx couchpotato
+sed -i '$d' "$NGINXCONFD"/couchpotato.conf
+echo "                if (\$remote_user = "@USER@") {
+                        proxy_pass http://127.0.0.1:@PORT@;
+                        break;
+               }
+      }" >> "$NGINXCONFD"/couchpotato.conf
+	
+sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
+sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/couchpotato.conf
+sleep 1
+
+FONCSERVICE restart nginx
+
+
 
 echo "" ; set "218" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
 set "182" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}"
@@ -1052,7 +1090,7 @@ FONCIP
 su "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session '
 
 # calcul port
-FONCPORT
+FONCPORT "$RUTORRENT" 5001
 
 # configuration munin
 FONCMUNIN "$USER" "$PORT"
@@ -1113,72 +1151,6 @@ sed -i "s/contact@mail.com/$EMAIL/g;" "$SBMCONFUSER"/"$USER"/config.ini
 
 chown -R "$WDATA" "$SBMCONFUSER"
 
-# calcul port sickrage
-FONCPORTSR
-
-#compteur
-echo "$PORTSR" >> "$SICKRAGE"/histo.log
-
-#config
-cp -f "$BONOBOX"/files/sickrage/sickrage.init /etc/init.d/sickrage_"$USER"
-chmod +x /etc/init.d/sickrage_"$USER"
-sed -i -e 's/xataz/'$USER'/g' /etc/init.d/sickrage_"$USER"
-sed -i -e 's/SR_USER=/SR_USER='$USER'/g' /etc/init.d/sickrage_"$USER"
-/etc/init.d/sickrage_"$USER" start && /etc/init.d/sickrage_"$USER" stop
-sleep 1
-sed -i -e 's/web_root = ""/web_root = \/sickrage/g' /opt/sickrage/data/"$USER"/config.ini
-sed -i -e 's/web_port = 8081/web_port = '$PORTSR'/g' /opt/sickrage/data/"$USER"/config.ini
-sed -i -e 's/torrent_dir = ""/torrent_dir = \/home\/'$USER'\/watch\//g' /opt/sickrage/data/"$USER"/config.ini
-FONCSCRIPTSR "$USER"
-
-#config nginx sickrage
-sed -i '$d' "$NGINXCONFD"/sickrage.conf
-echo "                if (\$remote_user = "@USER@") {
-                        proxy_pass http://127.0.0.1:@PORTSR@;
-                        break;
-               }
-      }" >> "$NGINXCONFD"/sickrage.conf
-	
-sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/sickrage.conf
-sed -i "s|@PORTSR@|$PORTSR|g;" "$NGINXCONFD"/sickrage.conf
-sleep 1
-
-# calcul port couchpotato
-FONCPORTCH
-#compteur
-echo "$PORTCH" >> "$COUCHPOTATO"/histo.log
-
-#config couch
-cp -f "$COUCHPOTATO"/init/ubuntu /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/CONFIG=\/etc\/default\/couchpotato/#CONFIG=\/etc\/default\/couchpotato/g' /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/# Provides:          couchpotato/# Provides:          '$USER'/g' /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/CP_USER:=couchpotato/CP_USER:='$USER'/g' /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/CP_DATA:=\/var\/opt\/couchpotato/CP_DATA:=\/opt\/couchpotato\/data\/'$USER'/g' /etc/init.d/couchpotato_"$USER"
-sed -i -e 's/CP_PIDFILE:=\/var\/run\/couchpotato\/couchpotato.pid/CP_PIDFILE:=\/opt\/couchpotato\/data\/'$USER'\/couchpotato.pid/g' /etc/init.d/couchpotato_"$USER"
-chmod +x /etc/init.d/couchpotato_"$USER"
-update-rc.d couchpotato_"$USER" defaults
-/etc/init.d/couchpotato_"$USER" start && /etc/init.d/couchpotato_"$USER" stop
-sleep 1
-
-#config de user couch
-chmod -Rf 755  "$COUCHPOTATO"/data/
-cp -f "$BONOBOX"/files/couchpotato/settings.conf /opt/couchpotato/data/"$USER"/settings.conf
-sed -i "s|@USER@|$USER|g;" /opt/couchpotato/data/"$USER"/settings.conf
-sed -i "s|@PORTCH@|$PORTCH|g;" /opt/couchpotato/data/"$USER"/settings.conf
-
-#config nginx couchpotato
-sed -i '$d' "$NGINXCONFD"/couchpotato.conf
-echo "                if (\$remote_user = "@USER@") {
-                        proxy_pass http://127.0.0.1:@PORTCH@;
-                        break;
-               }
-      }" >> "$NGINXCONFD"/couchpotato.conf
-	
-sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
-sed -i "s|@PORTCH@|$PORTCH|g;" "$NGINXCONFD"/couchpotato.conf
-sleep 1
-
-
 # configuration page index munin
 FONCGRAPH "$USER"
 FONCSERVICE start "$USER"-rtorrent
@@ -1189,6 +1161,75 @@ fi
 # log users
 echo "userlog">> "$RUTORRENT"/histo.log
 sed -i "s/userlog/$USER:$PORT/g;" "$RUTORRENT"/histo.log
+
+# calcul port sickrage
+FONCPORT "$SICKRAGE" 20001
+
+#compteur
+echo "$PORT" >> "$SICKRAGE"/histo.log
+
+#config
+cp -f "$BONOBOX"/files/sickrage/sickrage.init /etc/init.d/sickrage-"$USER"
+chmod +x /etc/init.d/sickrage-"$USER"
+sed -i -e 's/xataz/'$USER'/g' /etc/init.d/sickrage-"$USER"
+sed -i -e 's/SR_USER=/SR_USER='$USER'/g' /etc/init.d/sickrage-"$USER"
+/etc/init.d/sickrage-"$USER" start && /etc/init.d/sickrage-"$USER" stop
+sleep 1
+sed -i -e 's/web_root = ""/web_root = \/sickrage/g' "$SICKRAGE"/data/"$USER"/config.ini
+sed -i -e 's/web_port = 8081/web_port = '$PORT'/g' "$SICKRAGE"/data/"$USER"/config.ini
+sed -i -e 's/torrent_dir = ""/torrent_dir = \/home\/'$USER'\/watch\//g' "$SICKRAGE"/data/"$USER"/config.ini
+FONCSCRIPT "$USER" sickrage
+
+#config nginx sickrage
+sed -i '$d' "$NGINXCONFD"/sickrage.conf
+echo "                if (\$remote_user = "@USER@") {
+                        proxy_pass http://127.0.0.1:@PORT@;
+                        break;
+               }
+      }" >> "$NGINXCONFD"/sickrage.conf
+	
+sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/sickrage.conf
+sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/sickrage.conf
+sleep 1
+
+# calcul port couchpotato
+FONCPORT "$COUCHPOTATO" 5051
+
+#compteur
+echo "$PORT" >> "$COUCHPOTATO"/histo.log
+
+#config couch
+cp -f "$COUCHPOTATO"/init/ubuntu /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/CONFIG=\/etc\/default\/couchpotato/#CONFIG=\/etc\/default\/couchpotato/g' /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/# Provides:          couchpotato/# Provides:          '$USER'/g' /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/CP_USER:=couchpotato/CP_USER:='$USER'/g' /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/CP_DATA:=\/var\/opt\/couchpotato/CP_DATA:=\/opt\/couchpotato\/data\/'$USER'/g' /etc/init.d/couchpotato-"$USER"
+sed -i -e 's/CP_PIDFILE:=\/var\/run\/couchpotato\/couchpotato.pid/CP_PIDFILE:=\/opt\/couchpotato\/data\/'$USER'\/couchpotato.pid/g' /etc/init.d/couchpotato-"$USER"
+chmod +x /etc/init.d/couchpotato-"$USER"
+FONCSCRIPT "$USER" couchpotato
+/etc/init.d/couchpotato-"$USER" start && /etc/init.d/couchpotato-"$USER" stop
+sleep 1
+
+#config de user couch
+chmod -Rf 755  "$COUCHPOTATO"/data/
+cp -f "$BONOBOX"/files/couchpotato/settings.conf "$COUCHPOTATO"/data/"$USER"/settings.conf
+sed -i "s|@USER@|$USER|g;" "$COUCHPOTATO"/data/"$USER"/settings.conf
+sed -i "s|@PORT@|$PORT|g;" "$COUCHPOTATO"/data/"$USER"/settings.conf
+
+#config nginx couchpotato
+sed -i '$d' "$NGINXCONFD"/couchpotato.conf
+echo "                if (\$remote_user = "@USER@") {
+                        proxy_pass http://127.0.0.1:@PORT@;
+                        break;
+               }
+      }" >> "$NGINXCONFD"/couchpotato.conf
+	
+sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
+sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/couchpotato.conf
+sleep 1
+
+
+
 FONCSERVICE restart nginx
 echo "" ; set "218" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
 set "182" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}"
@@ -1228,12 +1269,12 @@ rm /tmp/rmuser
 update-rc.d "$USER"-rtorrent remove
 
 #arret sickrage
-FONCSERVICE stop sickrage_"$USER"
-update-rc.d sickrage_"$USER" remove
+FONCSERVICE stop sickrage-"$USER"
+update-rc.d sickrage-"$USER" remove
 
 #arret couchpotato
-FONCSERVICE stop couchpotato_"$USER"
-update-rc.d couchpotato_"$USER" remove
+FONCSERVICE stop couchpotato-"$USER"
+update-rc.d couchpotato-"$USER" remove
 
 # contrôle présence utilitaire
 if [ ! -f "$NGINXBASE"/aide/contact.html ]; then
@@ -1302,12 +1343,12 @@ chown -R "$WDATA" "$SBMCONFUSER"
 rm "$NGINXBASE"/"$USER".html
 
 #re-active sickrage
-FONCSCRIPTSR "$USER"
-FONCSERVICE start sickrage_"$USER"
+FONCSCRIPT "$USER" sickrage
+FONCSERVICE start sickrage-"$USER"
 
 #re-active couchpotato
-FONCSCRIPTCH "$USER"
-FONCSERVICE start couchpotato_"$USER"
+FONCSCRIPT "$USER" couchpotato
+FONCSERVICE start couchpotato-"$USER"
 
 echo "" ; set "264" "272" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND} ${CBLUE}$TXT2${CEND}"
 ;;
@@ -1414,15 +1455,15 @@ else
 	rm -R "${SBMCONFUSER:?}"/"$USER"
 	
 	#arret et suppression
-	FONCSERVICE stop sickrage_"$USER"
-	update-rc.d sickrage_"$USER" remove
-	rm -f /etc/init.d/sickrage_"$USER"
+	FONCSERVICE stop sickrage-"$USER"
+	update-rc.d sickrage-"$USER" remove
+	rm -f /etc/init.d/sickrage-"$USER"
 	rm -Rf "$SICKRAGE"/data/"$USER"
 	
 	#arret et suppression
-	FONCSERVICE stop couchpotato_"$USER"
-	update-rc.d couchpotato_"$USER" remove
-	rm -f /etc/init.d/couchpotato_"$USER"
+	FONCSERVICE stop couchpotato-"$USER"
+	update-rc.d couchpotato-"$USER" remove
+	rm -f /etc/init.d/couchpotato-"$USER"
 	rm -Rf "$COUCHPOTATO"/data/"$USER"
 	
 	

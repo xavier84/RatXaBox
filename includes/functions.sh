@@ -68,22 +68,15 @@ fi
 
 function FONCPORT ()
 {
-HISTO=$(wc -l < "$RUTORRENT"/histo.log)
-# shellcheck disable=SC2034
-PORT=$(( 5001+HISTO ))
+HISTO=$(wc -l < "$1"/histo.log)
+PORT=$(( $(($2))+HISTO ))
 }
 
-function FONCPORTSR ()
+function FONCSCRIPT ()
 {
-HISTO=$(wc -l < "$SICKRAGE"/histo.log)
-PORTSR=$(( 20001+HISTO ))
+update-rc.d "$2"-"$1" defaults
 }
 
-function FONCPORTCH	 ()
-{
-HISTO=$(wc -l < "$COUCHPOTATO"/histo.log)
-PORTCH=$(( 5051+HISTO ))
-}
 
 function FONCYES ()
 {
@@ -270,15 +263,5 @@ cp -f "$FILES"/rutorrent/irssi.conf /etc/init.d/"$1"-irssi
 sed -i "s/@USER@/$1/g;" /etc/init.d/"$1"-irssi
 chmod +x /etc/init.d/"$1"-irssi
 update-rc.d "$1"-irssi defaults
-}
-
-function FONCSCRIPTSR ()
-{
-update-rc.d sickrage_"$1" defaults
-}
-
-function FONCSCRIPTCH ()
-{
-update-rc.d couchpotato_"$1" defaults
 }
 
