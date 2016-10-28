@@ -32,8 +32,8 @@ apt-get update && apt-get upgrade -y
 apt-get install git-core -y
 
 cd /tmp
-git clone https://github.com/xavier84/rutorrent-bonobox
-cd rutorrent-bonobox
+git clone https://github.com/xavier84/RatXaBox
+cd RatXaBox
 chmod a+x bonobox.sh && ./bonobox.sh
 ```
 ![caps1](https://raw.github.com/exrat/rutorrent-bonobox/master/files/caps_script01.png)
