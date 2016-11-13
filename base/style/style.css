@@ -23,6 +23,12 @@ body
 
 }
 
+a
+{
+color: white;
+text-decoration: none;
+}
+
 #movemonkey {
     display: inline-block;
     opacity: 0.5;
@@ -56,7 +62,7 @@ body
 
 #welcome span
 {
-    color: #8bbcfe;
+    color: #D2691E;
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
 }
 
@@ -175,6 +181,12 @@ body
 {
     margin-top: 0%;
     font-size: 17px;
+}
+
+#description span
+{
+    color: #D2691E;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
 }
 
 .btn

@@ -41,8 +41,8 @@ INCLUDES="includes"
 # shellcheck source=/dev/null
 . "$INCLUDES"/functions.sh
 
-# contrôle droits utilisateur
-FONCROOT
+# contrôle droits utilisateur & OS
+FONCCONTROL
 clear
 
 # Contrôle installation
@@ -349,6 +349,7 @@ cp -f /tmp/favicon/*.png "$RUPLUGINS"/tracklabels/trackers/
 rm -R "${RUPLUGINS:?}"/theme/themes/Blue
 cp -R "$BONOBOX"/theme/ru/Blue "$RUPLUGINS"/theme/themes/Blue
 cp -R "$BONOBOX"/theme/ru/SpiritOfBonobo "$RUPLUGINS"/theme/themes/SpiritOfBonobo
+cp -R "$BONOBOX"/theme/ru/QuickBox-Dark "$RUPLUGINS"/theme/themes/QuickBox-Dark
 git clone git://github.com/Phlooo/ruTorrent-MaterialDesign.git "$RUPLUGINS"/theme/themes/MaterialDesign
 
 # configuration thème
@@ -531,7 +532,7 @@ FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
 
 # script rtorrent
-FONCSCRIPTRT "$USER" 
+FONCSCRIPTRT "$USER"
 FONCSERVICE start "$USER"-rtorrent
 FONCSERVICE start "$USER"-irssi
 
@@ -627,7 +628,7 @@ fi
 # déplacement clé 2048
 cp -f /tmp/dhparams.pem "$NGINXSSL"/dhparams.pem
 chmod 600 "$NGINXSSL"/dhparams.pem
-FONCSERVICE restart nginx
+#FONCSERVICE restart nginx
 # Contrôle
 if [ ! -f "$NGINXSSL"/dhparams.pem ]; then
 kill -HUP "$(pgrep -x openssl)"
@@ -636,7 +637,7 @@ set "176" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
 cd "$NGINXSSL" || exit
 openssl dhparam -out dhparams.pem 2048
 chmod 600 dhparams.pem
-FONCSERVICE restart nginx
+#FONCSERVICE restart nginx
 echo "" ; set "178" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 fi
 
@@ -723,10 +724,11 @@ cp -f "$BONOBOX"/files/couchpotato/couchpotato.vhost "$NGINXCONFD"/couchpotato.c
 sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
 sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/couchpotato.conf
 
+FONCSERVICE restart nginx
+
 #plex ou emby
 case $STREM  in
 		1)
-			echo plex
 			if [[ $VERSION =~ 7. ]]; then
 				echo "deb http://shell.ninthgate.se/packages/debian wheezy main" | tee -a /etc/apt/sources.list.d/plexmediaserver.list
 			elif [[ $VERSION =~ 8. ]]; then
@@ -734,13 +736,16 @@ case $STREM  in
 			fi
 			curl http://shell.ninthgate.se/packages/shell.ninthgate.se.gpg.key | apt-key add -
 			aptitude update && aptitude install -y plexmediaserver && service plexmediaserver start
+			#ajout icon de plex
+			git clone https://github.com/xavier84/linkplex /var/www/rutorrent/plugins/linkplex
+			chown -R "$WDATA" /var/www/rutorrent/plugins/linkplex
 			;;
 		2)
 			aptitude install -y  mono-xsp4
 			wget http://download.opensuse.org/repositories/home:emby/Debian_8.0/Release.key
 			apt-key add - < Release.key
 			apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-			
+			#ajout depot
 			echo "deb http://download.mono-project.com/repo/debian wheezy main" | tee /etc/apt/sources.list.d/mono-xamarin.list
 			echo "deb http://download.mono-project.com/repo/debian wheezy-apache24-compat main" | tee -a /etc/apt/sources.list.d/mono-xamarin.list
 			echo "deb http://download.mono-project.com/repo/debian wheezy-libjpeg62-compat main" | tee -a /etc/apt/sources.list.d/mono-xamarin.list
@@ -748,6 +753,9 @@ case $STREM  in
 			aptitude update
 			aptitude install -y mono-complete
 			aptitude install -y emby-server
+			#ajout icon de emby
+			git clone https://github.com/xavier84/linkemby /var/www/rutorrent/plugins/linkemby
+			chown -R "$WDATA" /var/www/rutorrent/plugins/linkemby
 			;;
 		*)
 			echo rien
@@ -900,7 +908,7 @@ chown root:"$USER" /home/"$USER"
 chmod 755 /home/"$USER"
 
 # script rtorrent
-FONCSCRIPTRT "$USER" 
+FONCSCRIPTRT "$USER"
 FONCSERVICE start "$USER"-rtorrent
 FONCSERVICE start "$USER"-irssi
 
