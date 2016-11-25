@@ -271,3 +271,11 @@ chmod +x /etc/init.d/"$1"-irssi
 update-rc.d "$1"-irssi defaults
 }
 
+function FONCBAKSESSION ()
+{
+sed -i '$d' "$SCRIPT"/backup-session.sh
+cat <<- EOF >> "$SCRIPT"/backup-session.sh
+FONCBACKUP $USER
+exit 0
+EOF
+}

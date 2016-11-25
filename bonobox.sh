@@ -342,6 +342,11 @@ cp -f "$FILES"/scripts/updateGeoIP.sh "$SCRIPT"/updateGeoIP.sh
 chmod a+x updateGeoIP.sh
 sh updateGeoIP.sh
 
+# script backup .session
+cp -f "$FILES"/scripts/backup-session.sh "$SCRIPT"/backup-session.sh
+chmod a+x backup-session.sh
+FONCBAKSESSION
+
 # favicons trackers
 cp -f /tmp/favicon/*.png "$RUPLUGINS"/tracklabels/trackers/
 
@@ -541,7 +546,8 @@ crontab -l > rtorrentdem
 
 # echo new cron into cron file
 echo "$UPGEOIP 2 9 * * sh $SCRIPT/updateGeoIP.sh > /dev/null 2>&1
-0 */2 * * * sh $SCRIPT/logserver.sh > /dev/null 2>&1" >> rtorrentdem
+0 */2 * * * sh $SCRIPT/logserver.sh > /dev/null 2>&1
+0 5 * * * sh $SCRIPT/backup-session.sh > /dev/null 2>&1" >> rtorrentdem
 
 # install new cron file
 crontab rtorrentdem
@@ -696,7 +702,7 @@ cd "$COUCHPOTATO" || exit
 #compteur port
 echo "$PORT" >> "$COUCHPOTATO"/histo.log
 
-#conf systemed 
+#conf systemed
 #cp -f "$COUCHPOTATO"/init/couchpotato.service /etc/systemd/system/couchpotato-"$USER".service
 #sed -i -e 's/couchpotato/'$USER'/g' /etc/systemd/system/couchpotato-"$USER".service
 #systemctl daemon-reload
@@ -873,6 +879,9 @@ echo "sed -i '/@USERMAJ@\ HTTP/d' access.log" >> "$SCRIPT"/logserver.sh
 sed -i "s/@USERMAJ@/$USERMAJ/g;" "$SCRIPT"/logserver.sh
 echo "ccze -h < /tmp/access.log > $RUTORRENT/logserver/access.html" >> "$SCRIPT"/logserver.sh
 
+# conf script bakup .session
+FONCBAKSESSION
+
 # config.php
 mkdir "$RUCONFUSER"/"$USER"
 FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
@@ -948,7 +957,7 @@ echo "                if (\$remote_user = "@USER@") {
                         break;
                }
       }" >> "$NGINXCONFD"/sickrage.conf
-	
+
 sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/sickrage.conf
 sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/sickrage.conf
 sleep 1
@@ -984,7 +993,7 @@ echo "                if (\$remote_user = "@USER@") {
                         break;
                }
       }" >> "$NGINXCONFD"/couchpotato.conf
-	
+
 sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
 sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/couchpotato.conf
 sleep 1
@@ -1116,6 +1125,11 @@ echo "sed -i '/@USERMAJ@\ HTTP/d' access.log" >> "$SCRIPT"/logserver.sh
 sed -i "s/@USERMAJ@/$USERMAJ/g;" "$SCRIPT"/logserver.sh
 echo "ccze -h < /tmp/access.log > $RUTORRENT/logserver/access.html" >> "$SCRIPT"/logserver.sh
 
+# conf script backup .session (rétro-compatibilité)
+if [ -f "$SCRIPT"/backup-session.sh ]; then
+	FONCBAKSESSION
+fi
+
 # config.php
 mkdir "$RUCONFUSER"/"$USER"
 FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
@@ -1143,7 +1157,7 @@ chown root:"$USER" /home/"$USER"
 chmod 755 /home/"$USER"
 
 # script rtorrent
-FONCSCRIPTRT "$USER" 
+FONCSCRIPTRT "$USER"
 
 # htpasswd
 FONCHTPASSWD "$USER"
@@ -1195,7 +1209,7 @@ echo "                if (\$remote_user = "@USER@") {
                         break;
                }
       }" >> "$NGINXCONFD"/sickrage.conf
-	
+
 sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/sickrage.conf
 sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/sickrage.conf
 sleep 1
@@ -1231,7 +1245,7 @@ echo "                if (\$remote_user = "@USER@") {
                         break;
                }
       }" >> "$NGINXCONFD"/couchpotato.conf
-	
+
 sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
 sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/couchpotato.conf
 sleep 1
@@ -1334,7 +1348,7 @@ echo "" ; set "270" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
 update-rc.d "$USER"-rtorrent remove
 
 # script rtorrent
-FONCSCRIPTRT "$USER" 
+FONCSCRIPTRT "$USER"
 
 # start user
  rm /home/"$USER"/.session/rtorrent.lock
@@ -1461,20 +1475,25 @@ else
 
 	# suppression seebbox-manager
 	rm -R "${SBMCONFUSER:?}"/"$USER"
-	
+
+	# suppression backup .session (rétro-compatibilité)
+	if [ -f "$SCRIPT"/backup-session.sh ]; then
+		sed -i "/backup $USER/d" "$SCRIPT"/backup-session.sh
+	fi
+
 	#arret et suppression
 	FONCSERVICE stop sickrage-"$USER"
 	update-rc.d sickrage-"$USER" remove
 	rm -f /etc/init.d/sickrage-"$USER"
 	rm -Rf "$SICKRAGE"/data/"$USER"
-	
+
 	#arret et suppression
 	FONCSERVICE stop couchpotato-"$USER"
 	update-rc.d couchpotato-"$USER" remove
 	rm -f /etc/init.d/couchpotato-"$USER"
 	rm -Rf "$COUCHPOTATO"/data/"$USER"
-	
-	
+
+
 	# suppression user
 	deluser "$USER" --remove-home
 
