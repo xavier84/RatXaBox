@@ -43,7 +43,6 @@ INCLUDES="includes"
 
 # contrôle droits utilisateur & OS
 FONCCONTROL
-clear
 
 # Contrôle installation
 if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
@@ -56,6 +55,7 @@ exec > >(tee "/tmp/install.log")  2>&1
 ####################################
 
 # message d'accueil
+clear
 echo "" ; set "102" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
 # shellcheck source=/dev/null
 . "$INCLUDES"/logo.sh
@@ -184,15 +184,17 @@ cp -f "$FILES"/nano/conf.nanorc /usr/share/nano/conf.nanorc
 cp -f "$FILES"/nano/xorg.nanorc /usr/share/nano/xorg.nanorc
 
 # édition conf nano
-echo "
+cat <<- EOF >> /etc/nanorc
+
 ## Config Files (.ini)
-include \"/usr/share/nano/ini.nanorc\"
+include "/usr/share/nano/ini.nanorc"
 
 ## Config Files (.conf)
-include \"/usr/share/nano/conf.nanorc\"
+include "/usr/share/nano/conf.nanorc"
 
 ## Xorg.conf
-include \"/usr/share/nano/xorg.nanorc\"">> /etc/nanorc
+include "/usr/share/nano/xorg.nanorc"
+EOF
 echo "" ; set "138" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # Config ntp & réglage heure fr
@@ -205,11 +207,13 @@ sed -i "s/server 1/#server 1/g;" /etc/ntp.conf
 sed -i "s/server 2/#server 2/g;" /etc/ntp.conf
 sed -i "s/server 3/#server 3/g;" /etc/ntp.conf
 
-echo "
+cat <<- EOF >> /etc/ntp.conf
+
 server 0.fr.pool.ntp.org
 server 1.fr.pool.ntp.org
 server 2.fr.pool.ntp.org
-server 3.fr.pool.ntp.org">> /etc/ntp.conf
+server 3.fr.pool.ntp.org
+EOF
 
 ntpdate -d 0.fr.pool.ntp.org
 fi
@@ -428,10 +432,7 @@ cp -R "$BONOBOX"/graph "$GRAPH"
 echo "" ; set "154" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # ssl configuration #
-
-#!/bin/bash
-
-openssl req -new -x509 -days 3658 -nodes -newkey rsa:2048 -out "$NGINXSSL"/server.crt -keyout "$NGINXSSL"/server.key<<EOF
+openssl req -new -x509 -days 3658 -nodes -newkey rsa:2048 -out "$NGINXSSL"/server.crt -keyout "$NGINXSSL"/server.key <<- EOF
 RU
 Russia
 Moskva
@@ -513,8 +514,10 @@ sed -i "s/Subsystem[[:blank:]]sftp[[:blank:]]\/usr\/lib\/openssh\/sftp-server/Su
 sed -i "s/UsePAM/#UsePAM/g;" /etc/ssh/sshd_config
 
 # chroot user
-echo "Match User $USER
-ChrootDirectory /home/$USER">> /etc/ssh/sshd_config
+cat <<- EOF >> /etc/ssh/sshd_config
+Match User $USER
+ChrootDirectory /home/$USER
+EOF
 
 # config .rtorrent.rc
 FONCTORRENTRC "$USER" "$PORT" "$RUTORRENT"
@@ -545,9 +548,11 @@ FONCSERVICE start "$USER"-irssi
 crontab -l > rtorrentdem
 
 # echo new cron into cron file
-echo "$UPGEOIP 2 9 * * sh $SCRIPT/updateGeoIP.sh > /dev/null 2>&1
+cat <<- EOF >> rtorrentdem
+$UPGEOIP 2 9 * * sh $SCRIPT/updateGeoIP.sh > /dev/null 2>&1
 0 */2 * * * sh $SCRIPT/logserver.sh > /dev/null 2>&1
-0 5 * * * sh $SCRIPT/backup-session.sh > /dev/null 2>&1" >> rtorrentdem
+0 5 * * * sh $SCRIPT/backup-session.sh > /dev/null 2>&1
+EOF
 
 # install new cron file
 crontab rtorrentdem
@@ -565,7 +570,8 @@ cp -f "$FILES"/fail2ban/nginx-badbots.conf /etc/fail2ban/filter.d/nginx-badbots.
 cp -f /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 sed  -i "/ssh/,+6d" /etc/fail2ban/jail.local
 
-echo "
+cat <<- EOF >> /etc/fail2ban/jail.local
+
 [ssh]
 enabled  = true
 port     = ssh
@@ -588,7 +594,8 @@ port  = http,https
 filter = nginx-badbots
 logpath = /var/log/nginx/*access.log
 banaction = iptables-multiport
-maxretry = 5" >> /etc/fail2ban/jail.local
+maxretry = 5
+EOF
 
 FONCSERVICE restart fail2ban
 echo "" ; set "170" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
@@ -613,9 +620,9 @@ FONCSERVICE restart vsftpd
 
 sed  -i "/vsftpd/,+10d" /etc/fail2ban/jail.local
 
-echo "
-[vsftpd]
+cat <<- EOF >> /etc/fail2ban/jail.local
 
+[vsftpd]
 enabled  = true
 port     = ftp,ftp-data,ftps,ftps-data
 filter   = vsftpd
@@ -625,7 +632,8 @@ banaction = iptables-multiport
 # logpath = /var/log/auth.log
 # if you want to rely on PAM failed login attempts
 # vsftpd's failregex should match both of those formats
-maxretry = 5" >> /etc/fail2ban/jail.local
+maxretry = 5
+EOF
 
 FONCSERVICE restart fail2ban
 echo "" ; set "172" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
@@ -887,8 +895,10 @@ mkdir "$RUCONFUSER"/"$USER"
 FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 
 # chroot user supplèmentaire
-echo "Match User $USER
-ChrootDirectory /home/$USER">> /etc/ssh/sshd_config
+cat <<- EOF >> /etc/ssh/sshd_config
+Match User $USER
+ChrootDirectory /home/$USER
+EOF
 
 FONCSERVICE restart ssh
 
@@ -903,8 +913,10 @@ sed -i "s/contact@mail.com/$EMAIL/g;" "$SBMCONFUSER"/"$USER"/config.ini
 
 # plugin.ini
 cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
-echo "[linklogs]
-enabled = no" >> "$RUCONFUSER"/"$USER"/plugins.ini
+cat <<- EOF >> "$RUCONFUSER"/"$USER"/plugins.ini
+[linklogs]
+enabled = no
+EOF
 
 # configuration autodl-irssi
 FONCIRSSI "$USER" "$PORT" "$USERPWD"
@@ -952,11 +964,13 @@ FONCSERVICE start sickrage-"$USER"
 
 #config nginx sickrage
 sed -i '$d' "$NGINXCONFD"/sickrage.conf
-echo "                if (\$remote_user = "@USER@") {
+cat <<- EOF >> "$NGINXCONFD"/sickrage.conf
+                if (\$remote_user = "@USER@") {
                         proxy_pass http://127.0.0.1:@PORT@;
                         break;
                }
-      }" >> "$NGINXCONFD"/sickrage.conf
+      }
+EOF
 
 sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/sickrage.conf
 sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/sickrage.conf
@@ -988,11 +1002,14 @@ sed -i "s|@PORT@|$PORT|g;" "$COUCHPOTATO"/data/"$USER"/settings.conf
 
 #config nginx couchpotato
 sed -i '$d' "$NGINXCONFD"/couchpotato.conf
-echo "                if (\$remote_user = "@USER@") {
+cat <<- EOF >> "$NGINXCONFD"/couchpotato.conf
+                if (\$remote_user = "@USER@") {
                         proxy_pass http://127.0.0.1:@PORT@;
                         break;
                }
-      }" >> "$NGINXCONFD"/couchpotato.conf
+      }
+EOF
+# tu verifiras que le \$remote au dessus passe bien !
 
 sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
 sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/couchpotato.conf
@@ -1016,8 +1033,6 @@ else
 # lancement gestion des utilisateurs ruTorrent #
 ################################################
 
-clear
-
 # Contrôle installation
 if [ ! -f "$RUTORRENT"/histo.log ]; then
 	echo "" ; set "220" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
@@ -1026,6 +1041,7 @@ if [ ! -f "$RUTORRENT"/histo.log ]; then
 fi
 
 # message d'accueil
+clear
 echo "" ; set "224" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
 # shellcheck source=/dev/null
 . "$INCLUDES"/logo.sh
@@ -1136,8 +1152,10 @@ FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 
 # plugin.ini
 cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
-echo "[linklogs]
-enabled = no" >> "$RUCONFUSER"/"$USER"/plugins.ini
+cat <<- EOF >> "$RUCONFUSER"/"$USER"/plugins.ini
+[linklogs]
+enabled = no
+EOF
 
 # configuration autodl-irssi
 if [ -f "/etc/irssi.conf" ]; then
@@ -1145,8 +1163,10 @@ FONCIRSSI "$USER" "$PORT" "$USERPWD"
 fi
 
 # chroot user supplémentaire
-echo "Match User $USER
-ChrootDirectory /home/$USER">> /etc/ssh/sshd_config
+cat <<- EOF >> /etc/ssh/sshd_config
+Match User $USER
+ChrootDirectory /home/$USER
+EOF
 
 FONCSERVICE restart ssh
 
@@ -1204,11 +1224,14 @@ FONCSCRIPT "$USER" sickrage
 
 #config nginx sickrage
 sed -i '$d' "$NGINXCONFD"/sickrage.conf
-echo "                if (\$remote_user = "@USER@") {
+cat <<- EOF >> "$NGINXCONFD"/sickrage.conf
+                if (\$remote_user = "@USER@") {
                         proxy_pass http://127.0.0.1:@PORT@;
                         break;
                }
-      }" >> "$NGINXCONFD"/sickrage.conf
+      }
+EOF
+# pareil verif du \$remote !
 
 sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/sickrage.conf
 sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/sickrage.conf
@@ -1240,11 +1263,14 @@ sed -i "s|@PORT@|$PORT|g;" "$COUCHPOTATO"/data/"$USER"/settings.conf
 
 #config nginx couchpotato
 sed -i '$d' "$NGINXCONFD"/couchpotato.conf
-echo "                if (\$remote_user = "@USER@") {
+cat <<- EOF >> "$NGINXCONFD"/couchpotato.conf
+                if (\$remote_user = "@USER@") {
                         proxy_pass http://127.0.0.1:@PORT@;
                         break;
                }
-      }" >> "$NGINXCONFD"/couchpotato.conf
+      }
+EOF
+# \$remote !
 
 sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
 sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/couchpotato.conf
@@ -1530,4 +1556,3 @@ esac
 done
 fi
 fi
-
