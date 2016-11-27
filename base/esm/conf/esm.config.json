@@ -1,0 +1,63 @@
+{
+    "esm": {
+        "version": "2.5",
+        "website": "https://mondedie.fr/",
+        "check_updates": false,
+        "auto_refresh": 60,
+        "theme": "dark",
+        "custom_title": "Bienvenue sur RatXaBox"
+    },
+    "cpu": {
+        "enable_temperature": true
+    },
+    "disk": {
+        "show_tmpfs": false,
+        "show_filesystem": true
+    },
+    "ping": {
+        "hosts": [
+            "ratxabox.ovh",
+            "facebook.com",
+            "google.com"
+        ]
+    },
+    "last_login": {
+        "enable": true,
+        "max": 5
+    },
+    "services": {
+        "show_port": true,
+        "list": [
+            {
+                "name": "Web Nginx",
+                "host": "localhost",
+                "port": 80,
+                "protocol": "tcp"
+            },
+            {
+                "name": "Web Nginx ssl",
+                "host": "localhost",
+                "port": 443,
+                "protocol": "tcp"
+            },
+            {
+                "name": "FTP Server",
+                "host": "localhost",
+                "port": 21,
+                "protocol": "tcp"
+            },
+            {
+                "name": "Dns Server",
+                "host": "localhost",
+                "port": 53,
+                "protocol": "tcp"
+            },
+            {
+                "name": "SSH",
+                "host": "localhost",
+                "port": 22,
+                "protocol": "tcp"
+            }
+        ]
+    }
+}
