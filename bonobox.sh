@@ -100,8 +100,12 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	echo "" ; set "128" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 	read -r SERVFTP
 
-	#choix de streming
-	echo "" ; set "310" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
+	# choix de streaming
+	echo "" ; set "234" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+	set "236" "310" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
+	set "238" "312" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
+	set "240" "314" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
+	set "260" ; FONCTXT "$1" ; echo -n -e "${CBLUE}$TXT1 ${CEND}"
 	read -r STREM
 
 	# récupération 5% root sur /home ou /home/user si présent
