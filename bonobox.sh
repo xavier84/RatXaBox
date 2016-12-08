@@ -987,7 +987,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			chmod +x /etc/init.d/sickrage-"$USER"
 			sed -i -e 's/xataz/'$USER'/g' /etc/init.d/sickrage-"$USER"
 			sed -i -e 's/SR_USER=/SR_USER='$USER'/g' /etc/init.d/sickrage-"$USER"
-			/etc/init.d/sickrage-"$USER" start && /etc/init.d/sickrage-"$USER" stop
+			/etc/init.d/sickrage-"$USER" start && sleep 5 && /etc/init.d/sickrage-"$USER" stop
 			sleep 1
 			sed -i -e 's/web_root = ""/web_root = \/sickrage/g' "$SICKRAGE"/data/"$USER"/config.ini
 			sed -i -e 's/web_port = 8081/web_port = '$PORT'/g' "$SICKRAGE"/data/"$USER"/config.ini
@@ -1024,7 +1024,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			sed -i -e 's/CP_PIDFILE:=\/var\/run\/couchpotato\/couchpotato.pid/CP_PIDFILE:=\/opt\/couchpotato\/data\/'$USER'\/couchpotato.pid/g' /etc/init.d/couchpotato-"$USER"
 			chmod +x /etc/init.d/couchpotato-"$USER"
 			FONCSCRIPT "$USER" couchpotato
-			/etc/init.d/couchpotato-"$USER" start && /etc/init.d/couchpotato-"$USER" stop
+			/etc/init.d/couchpotato-"$USER" start && sleep 5 && /etc/init.d/couchpotato-"$USER" stop
 			sleep 1
 
 			#config de user couch
