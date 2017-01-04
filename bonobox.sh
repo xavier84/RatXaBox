@@ -168,11 +168,67 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	apt-get update && apt-get upgrade -y
 	echo "" ; set "132" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
-	apt-get install -y htop openssl apt-utils python python-cheetah python3-lxml python3-openssl build-essential  libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev vim nano ccze screen subversion apache2-utils curl "$PHPNAME" "$PHPNAME"-cli "$PHPNAME"-fpm "$PHPNAME"-curl "$PHPNAME"-geoip unrar rar zip buildtorrent fail2ban ntp ntpdate munin ffmpeg aptitude dnsutils irssi  libarchive-zip-perl  libjson-perl libjson-xs-perl libxml-libxslt-perl libwww-perl nginx
+	apt-get install -y \
+	htop \
+	openssl \
+	apt-utils \
+	python \
+	python-cheetah \
+	python3-lxml \
+	python3-openssl \
+	build-essential  \
+	libssl-dev \
+	pkg-config \
+	automake \
+	libcppunit-dev \
+	libtool \
+	whois \
+	libcurl4-openssl-dev \
+	libsigc++-2.0-dev \
+	libncurses5-dev \
+	vim \
+	nano \
+	ccze \
+	screen \
+	subversion \
+	apache2-utils \
+	curl \
+	"$PHPNAME" \
+	"$PHPNAME"-cli \
+	"$PHPNAME"-fpm \
+	"$PHPNAME"-curl \
+	"$PHPNAME"-geoip \
+	unrar \
+	rar \
+	zip \
+	mktorrent \
+	fail2ban \
+	ntp \
+	ntpdate \
+	munin \
+	ffmpeg \
+	aptitude \
+	dnsutils \
+	irssi  \
+	libarchive-zip-perl  \
+	libjson-perl \
+	libjson-xs-perl \
+	libxml-libxslt-perl \
+	libwww-perl \
+	nginx \
+	libmms0 \
+	pastebinit
 
-	#if [[ $VERSION =~ 8. ]]; then
-		#apt-get install -y "$PHPNAME"-xml "$PHPNAME"-mbstring
-	#fi
+	if [[ $VERSION =~ 7. ]]; then
+		apt-get install -y \
+			libtinyxml2-0.0.0 \
+			libglib2.0-0
+	elif [[ $VERSION =~ 8. ]]; then
+		apt-get install -y \
+			libtinyxml2-2
+			# "$PHPNAME"-xml
+			# "$PHPNAME"-mbstring
+	fi
 
 	echo "" ; set "136" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
@@ -310,9 +366,9 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 	# configuration create
 	# shellcheck disable=SC2154
-	sed -i "s#$useExternal = false;#$useExternal = 'buildtorrent';#" "$RUPLUGINS"/create/conf.php
+	sed -i "s#$useExternal = false;#$useExternal = 'mktorrent';#" "$RUPLUGINS"/create/conf.php
 	# shellcheck disable=SC2154
-	sed -i "s#$pathToCreatetorrent = '';#$pathToCreatetorrent = '/usr/bin/buildtorrent';#" "$RUPLUGINS"/create/conf.php
+	sed -i "s#$pathToCreatetorrent = '';#$pathToCreatetorrent = '/usr/bin/mktorrent';#" "$RUPLUGINS"/create/conf.php
 
 	# configuration fileshare
 	chown -R "$WDATA" "$RUPLUGINS"/fileshare
@@ -333,10 +389,8 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	touch autodl-irssi/css/materialdesign.min.css
 	FONCIRSSI "$USER" "$PORT" "$USERPWD"
 
-	# mediainfo
-	cd "$BONOBOX" || exit
-	# shellcheck source=/dev/null
-	. "$INCLUDES"/mediainfo.sh
+	# installation mediainfo
+	FONCMEDIAINFO
 
 	# script mise à jour mensuel geoip et complément plugin city
 	# création dossier par sécurité suite bug d'install
@@ -348,19 +402,16 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	UPGEOIP=$((MINIMUM+RANDOM*(1+MAXIMUM-MINIMUM)/32767))
 
 	cd "$SCRIPT" || exit
-	cp -f "$FILES"/scripts/updateGeoIP.sh "$SCRIPT"/updateGeoIP.sh
-	chmod a+x updateGeoIP.sh
+
+	for COPY in 'updateGeoIP.sh' 'backup-session.sh' 'openvpn-install.sh'
+	do
+		cp -f "$FILES"/scripts/"$COPY" "$SCRIPT"/"$COPY"
+		chmod a+x "$COPY"
+	done
+
 	sh updateGeoIP.sh
-
-	# script backup .session
-	cp -f "$FILES"/scripts/backup-session.sh "$SCRIPT"/backup-session.sh
-	chmod a+x backup-session.sh
 	FONCBAKSESSION
-
-	#check rtorrent et envoie les logs sur paste.debian.net
-	cp -f "$FILES"/scripts/check-rtorrent.sh "$SCRIPT"/check-rtorrent.sh
-	chmod a+x check-rtorrent.sh
-	ln -s "$SCRIPT"/check-rtorrent.sh /usr/sbin/check-rtorrent
+	ln -s "$SCRIPT"/openvpn-install.sh /usr/sbin/openvpn-ratxabox
 
 	# favicons trackers
 	cp -f /tmp/favicon/*.png "$RUPLUGINS"/tracklabels/trackers/
