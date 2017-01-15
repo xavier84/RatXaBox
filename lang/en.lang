@@ -105,6 +105,9 @@
 304 Choose your installation:
 306 Full
 308 Light
-310 : Install Plex
-312 : Install Emby
-314 : Do not install
+810 : Install Plex
+812 : Install Emby
+814 : Do not install
+816  10
+818  0
+860 Additional Options

@@ -53,6 +53,12 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	# log de l'installation
 	exec > >(tee "/tmp/install.log")  2>&1
 
+	# liste users en arguments
+	TESTARG=$(echo "$ARG" | tr -s ' ' '\n' | grep :)
+	if [ ! -z "$TESTARG" ]; then
+		echo "$ARG" | tr -s ' ' '\n' | grep : > "$ARGFILE"
+	fi
+
 	####################################
 	# lancement installation ruTorrent #
 	####################################
@@ -63,50 +69,58 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	# shellcheck source=/dev/null
 	. "$INCLUDES"/logo.sh
 
-	echo "" ; set "104" ; FONCTXT "$1" ; echo -e "${CYELLOW}$TXT1${CEND}"
-	set "106" ; FONCTXT "$1" ; echo -e "${CYELLOW}$TXT1${CEND}" ; echo ""
+	if [ ! -s "$ARGFILE" ]; then
+		echo ""; set "104"; FONCTXT "$1"; echo -e "${CYELLOW}$TXT1${CEND}"
+		set "106"; FONCTXT "$1"; echo -e "${CYELLOW}$TXT1${CEND}"; echo ""
 
-	while :; do # demande nom user
-		set "108" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
-		FONCUSER
-	done
+		while :; do # demande nom user
+			set "108"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1 ${CEND}"
+			FONCUSER
+		done
 
-	echo ""
-	while :; do # demande mot de passe
-		set "112" "114" "116" ; FONCTXT "$1" "$2" "$3" ; echo -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$TXT2${CEND} ${CGREEN}$TXT3 ${CEND}"
-		FONCPASS
-	done
+		echo ""
+		while :; do # demande mot de passe
+			set "112" "114" "116"; FONCTXT "$1" "$2" "$3"; echo -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$TXT2${CEND} ${CGREEN}$TXT3 ${CEND}"
+			FONCPASS
+		done
+	else
+		FONCARG
+	fi
 
 	PORT=5001
 
-	# email admin seedbox-Manager
-	while :; do
-		echo "" ; set "124" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
-		read -r INSTALLMAIL
-		if [ "$INSTALLMAIL" = "" ]; then
-			EMAIL=contact@exemple.com
-			break
-		else
-			if [[ "$INSTALLMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]*$ ]]; then
-				EMAIL="$INSTALLMAIL"
+	# email admin seedbox-manager
+	if [ -z "$ARGMAIL" ]; then
+		while :; do
+			echo ""; set "124"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1 ${CEND}"
+			read -r INSTALLMAIL
+			if [ "$INSTALLMAIL" = "" ]; then
+				EMAIL=contact@exemple.com
 				break
 			else
-				echo "" ; set "126" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
+				if [[ "$INSTALLMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]*$ ]]; then
+					EMAIL="$INSTALLMAIL"
+					break
+				else
+					echo ""; set "126"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"
+				fi
 			fi
-		fi
-	done
+		done
+	else
+		EMAIL="$ARGMAIL"
+	fi
 
 	# installation vsftpd
-	echo "" ; set "128" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
-	read -r SERVFTP
-
-	# choix de streaming
-	echo "" ; set "234" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
-	set "236" "310" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
-	set "238" "312" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
-	set "240" "314" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
-	set "260" ; FONCTXT "$1" ; echo -n -e "${CBLUE}$TXT1 ${CEND}"
-	read -r STREM
+	if [ -z "$ARGFTP" ]; then
+		echo ""; set "128"; FONCTXT "$1"; echo -n -e "${CGREEN}$TXT1 ${CEND}"
+		read -r SERVFTP
+	else
+		if [ "$ARGFTP" = "ftp-off" ]; then
+			SERVFTP="n"
+		else
+			SERVFTP="y"
+		fi
+	fi
 
 	# récupération 5% root sur /home ou /home/user si présent
 	FSHOME=$(df -h | grep /home | cut -c 6-9)
@@ -403,7 +417,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 	cd "$SCRIPT" || exit
 
-	for COPY in 'updateGeoIP.sh' 'backup-session.sh' 'openvpn-install.sh'
+	for COPY in 'updateGeoIP.sh' 'backup-session.sh'
 	do
 		cp -f "$FILES"/scripts/"$COPY" "$SCRIPT"/"$COPY"
 		chmod a+x "$COPY"
@@ -411,7 +425,6 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 	sh updateGeoIP.sh
 	FONCBAKSESSION
-	ln -s "$SCRIPT"/openvpn-install.sh /usr/sbin/openvpn-ratxabox
 
 	# favicons trackers
 	cp -f /tmp/favicon/*.png "$RUPLUGINS"/tracklabels/trackers/
@@ -825,107 +838,90 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 	FONCSERVICE restart nginx
 
-	#plex ou emby
-	case $STREM  in
-		1)
-			if [[ $VERSION =~ 7. ]]; then
-				echo "deb http://shell.ninthgate.se/packages/debian wheezy main" | tee -a /etc/apt/sources.list.d/plexmediaserver.list
-			elif [[ $VERSION =~ 8. ]]; then
-				echo "deb http://shell.ninthgate.se/packages/debian jessie main" | tee -a /etc/apt/sources.list.d/plexmediaserver.list
-			fi
-			curl http://shell.ninthgate.se/packages/shell.ninthgate.se.gpg.key | apt-key add -
-			aptitude update && aptitude install -y plexmediaserver && service plexmediaserver start
-			#ajout icon de plex
-			git clone https://github.com/xavier84/linkplex /var/www/rutorrent/plugins/linkplex
-			chown -R "$WDATA" /var/www/rutorrent/plugins/linkplex
-		;;
 
-		2)
-			aptitude install -y  mono-xsp4
-			wget http://download.opensuse.org/repositories/home:emby/Debian_8.0/Release.key
-			apt-key add - < Release.key
-			apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-			#ajout depot
-			echo "deb http://download.mono-project.com/repo/debian wheezy main" | tee /etc/apt/sources.list.d/mono-xamarin.list
-			echo "deb http://download.mono-project.com/repo/debian wheezy-apache24-compat main" | tee -a /etc/apt/sources.list.d/mono-xamarin.list
-			echo "deb http://download.mono-project.com/repo/debian wheezy-libjpeg62-compat main" | tee -a /etc/apt/sources.list.d/mono-xamarin.list
-			echo 'deb http://download.opensuse.org/repositories/home:/emby/Debian_8.0/ /' >> /etc/apt/sources.list.d/emby-server.list
-			aptitude update
-			aptitude install -y mono-complete
-			aptitude install -y emby-server
-			#ajout icon de emby
-			git clone https://github.com/xavier84/linkemby /var/www/rutorrent/plugins/linkemby
-			chown -R "$WDATA" /var/www/rutorrent/plugins/linkemby
-		;;
-
-		*)
-			echo ""
-			;;
-	esac
-
-	set "180" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
-
-	echo "" ; set "182" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}"
-	set "184" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND}"
-	set "186" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}${PASSNGINX}${CEND}"
-	set "188" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}" ; echo ""
+	set "180"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
+	if [ ! -f "$ARGFILE" ]; then
+		echo ""; set "182"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1${CEND}"
+		set "184"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND}"
+		set "186"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}${PASSNGINX}${CEND}"
+		set "188"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1${CEND}"; echo ""
+	fi
 
 	# ajout utilisateur supplémentaire
-
 	while :; do
-		set "190" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
-		read -r REPONSE
+		if [ ! -f "$ARGFILE" ]; then
+			set "190"; FONCTXT "$1"; echo -n -e "${CGREEN}$TXT1 ${CEND}"
+			read -r REPONSE
+		else
+			if [ -s "$ARGFILE" ]; then
+				REPONSE="y"
+			else
+				REPONSE="n"
+			fi
+		fi
 
 		if FONCNO "$REPONSE"; then
-
 			# fin d'installation
-			echo "" ; set "192" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+			echo ""; set "192"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
 			cp -f /tmp/install.log "$RUTORRENT"/install.log
 			sh "$SCRIPT"/logserver.sh
 			ccze -h < "$RUTORRENT"/install.log > "$RUTORRENT"/install.html
-			> /var/log/nginx/rutorrent-error.log
-			echo "" ; set "194" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
-			read -r REBOOT
+			true > /var/log/nginx/rutorrent-error.log
+			if [ -z "$ARGREBOOT" ]; then
+				echo ""; set "194"; FONCTXT "$1"; echo -n -e "${CGREEN}$TXT1 ${CEND}"
+				read -r REBOOT
+			else
+				if [ "$ARGREBOOT" = "reboot-off" ]; then
+					break
+				else
+					reboot
+					break
+				fi
+			fi
 
 			if FONCNO "$REBOOT"; then
-				echo "" ; set "196" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+				echo ""; set "196"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
 				echo -e "${CYELLOW}https://$IP/rutorrent/install.html${CEND}"
-				echo "" ; set "200" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
-				echo "" ; set "202" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+				echo ""; set "200"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"
+				echo ""; set "202"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
 				echo -e "${CYELLOW}https://$IP/rutorrent/${CEND}"
-				echo "" ; set "206" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+				echo ""; set "206"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
 				echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}"
-				echo "" ; echo "" ; set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
-				echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}" ; echo ""
+				echo ""; echo ""; set "210"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
+				echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}"; echo ""
 				break
 			fi
 
 			if FONCYES "$REBOOT"; then
-				echo "" ; set "196" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+				echo ""; set "196"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
 				echo -e "${CYELLOW}https://$IP/rutorrent/install.html${CEND}"
-				echo "" ; set "202" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+				echo ""; set "202"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
 				echo -e "${CYELLOW}https://$IP/rutorrent/${CEND}"
-				echo "" ; set "206" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+				echo ""; set "206"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
 				echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}"
-				echo "" ; echo "" ; set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
-				echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}" ; echo ""
+				echo ""; echo ""; set "210"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
+				echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}"; echo ""
 				reboot
 				break
 			fi
 		fi
 
 		if FONCYES "$REPONSE"; then
-			echo ""
-			while :; do # demande nom user
-				set "214" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
-				FONCUSER
-			done
+			if [ ! -s "$ARGFILE" ]; then
+				echo ""
+				while :; do # demande nom user
+					set "214"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1 ${CEND}"
+					FONCUSER
+				done
 
-			echo ""
-			while :; do # demande mot de passe
-				set "112" "114" "116" ; FONCTXT "$1" "$2" "$3" ; echo -e "${CGREEN}$TXT1${CEND}${CYELLOW}$TXT2${CEND}${CGREEN}$TXT3 ${CEND}"
-				FONCPASS
-			done
+				echo ""
+				while :; do # demande mot de passe
+					set "112" "114" "116"; FONCTXT "$1" "$2" "$3"; echo -e "${CGREEN}$TXT1${CEND}${CYELLOW}$TXT2${CEND}${CGREEN}$TXT3 ${CEND}"
+					FONCPASS
+				done
+			else
+				FONCARG
+			fi
 
 			# récupération 5% root sur /home/user si présent
 			FONCFSUSER "$USER"
@@ -1103,11 +1099,13 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 
 
-			echo "" ; set "218" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
-			set "182" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}"
-			set "184" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND}"
-			set "186" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}${PASSNGINX}${CEND}"
-			set "188" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}" ; echo ""
+			if [ ! -f "$ARGFILE" ]; then
+				echo ""; set "218"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"; echo ""
+				set "182"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1${CEND}"
+				set "184"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND}"
+				set "186"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}${PASSNGINX}${CEND}"
+				set "188"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1${CEND}"; echo ""
+			fi
 		fi
 	done
 

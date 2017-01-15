@@ -8,8 +8,7 @@ CGREEN="${CSI}1;32m"
 CYELLOW="${CSI}1;33m"
 CBLUE="${CSI}1;34m"
 
-VERSION=$(cat /etc/debian_version)
-
+ARG="$*"
 VERSION=$(cat /etc/debian_version)
 
 if [[ $VERSION =~ 7. ]]; then
@@ -63,6 +62,11 @@ NGINXENABLE="/etc/nginx/sites-enabled"
 NGINXSSL="/etc/nginx/ssl"
 NGINXCONFD="/etc/nginx/conf.d"
 SOURCES="/etc/apt/sources.list.d"
+ARGFILE="/tmp/arg.tmp"
+ARGSBM=$(echo "$ARG" | tr -s ' ' '\n' | grep -m 1 sbm)
+ARGMAIL=$(echo "$ARG" | tr -s ' ' '\n' | grep -m 1 @)
+ARGFTP=$(echo "$ARG" | tr -s ' ' '\n' | grep -m 1 ftp)
+ARGREBOOT=$(echo "$ARG" | tr -s ' ' '\n' | grep -m 1 reboot)
 WDATA="www-data:www-data"
 SICKRAGE="/opt/sickrage"
 COUCHPOTATO="/opt/couchpotato"

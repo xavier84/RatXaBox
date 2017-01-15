@@ -105,6 +105,9 @@
 304 Choisissez votre installation:
 306 Full
 308 Light
-310 : Installer Plex
-312 : Installer Emby
-314 : Ne rien installer
+810 : Installer Plex
+812 : Installer Emby
+814 : Installer OpenVpn/géré les utilisateurs
+816  10
+818  0
+860 : Options supplémentaires

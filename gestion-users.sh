@@ -44,6 +44,7 @@ if FONCYES "$VALIDE"; then
 		set "244" "256" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
 		set "246" "296"; FONCTXT "$1" "$2"; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
 		set "294" "258"; FONCTXT "$1" "$2"; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
+		set "816" "860" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
 		set "260" ; FONCTXT "$1" ; echo -n -e "${CBLUE}$TXT1 ${CEND}"
 		read -r OPTION
 
@@ -488,6 +489,11 @@ if FONCYES "$VALIDE"; then
 			6) # debug
 				chmod a+x "$FILES"/scripts/check-rtorrent.sh
 				bash "$FILES"/scripts/check-rtorrent.sh
+
+			;;
+			10) # option
+				chmod a+x ./options.sh
+				bash ./options.sh
 
 			;;
 			7) # sortir gestion utilisateurs
