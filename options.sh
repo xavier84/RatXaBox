@@ -60,7 +60,7 @@ clear
 		;;
 
 		4)
-			https://raw.githubusercontent.com/xavier84/Script-xavier/master/filebot/filebot.sh
+			wget https://raw.githubusercontent.com/xavier84/Script-xavier/master/filebot/filebot.sh
 			chmod +x filebot.sh && ./filebot.sh
 		;;
 
