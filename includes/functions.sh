@@ -245,7 +245,7 @@ FONCIRSSI () {
 	cd /home/"$1"/.irssi/scripts || exit
 	curl -sL http://git.io/vlcND | grep -Po '(?<="browser_download_url": ")(.*-v[\d.]+.zip)' | xargs wget --quiet -O autodl-irssi.zip
 	unzip -o autodl-irssi.zip
-	rm autodl-irssi.zip
+	command rm autodl-irssi.zip
 	cp -f /home/"$1"/.irssi/scripts/autodl-irssi.pl /home/"$1"/.irssi/scripts/autorun
 	mkdir -p /home/"$1"/.autodl
 	cat <<- EOF > /home/"$1"/.autodl/autodl.cfg
