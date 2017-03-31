@@ -480,7 +480,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	cp -f "$FILES"/nginx/ciphers.conf "$NGINXCONFD"/ciphers.conf
 
 	cp -f "$FILES"/rutorrent/rutorrent.conf "$NGINXENABLE"/rutorrent.conf
-	for VAR in "${!NGINXCONFD@}" "${!NGINXBASE@}" "${!NGINXSSL@}" "${!NGINXPASS@}" "${!NGINXWEB@}" "${!SBM@}" "${!USER@}"; do
+	for VAR in "${!NGINXCONFD@}" "${!NGINXBASE@}" "${!NGINXSSL@}" "${!NGINXPASS@}" "${!NGINXWEB@}" "${!PHPSOCK@}" "${!SBM@}" "${!USER@}"; do
 		sed -i "s|@${VAR}@|${!VAR}|g;" "$NGINXENABLE"/rutorrent.conf
 	done
 
@@ -546,18 +546,19 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 	## app
 	cd "$NGINXWEB" || exit
-	composer create-project magicalex/seedbox-manager
+	composer create-project magicalex/seedbox-manager:"$SBMVERSION"
 	cd seedbox-manager || exit
 	bower install --allow-root --config.interactive=false
+	touch "$SBM"/sbm_v3
 	chown -R "$WDATA" "$SBM"
 	## conf app
-	cd source-reboot-rtorrent || exit
+	cd source || exit
 	chmod +x install.sh
 	./install.sh
 
-	cp -f "$FILES"/nginx/php-manager.conf "$NGINXCONFD"/php-manager.conf
-	sed -i "s|@SBM@|$SBM|g;" "$NGINXCONFD"/php-manager.conf
-	sed -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php-manager.conf
+	#cp -f "$FILES"/nginx/php-manager.conf "$NGINXCONFD"/php-manager.conf
+	#sed -i "s|@SBM@|$SBM|g;" "$NGINXCONFD"/php-manager.conf
+	#sed -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php-manager.conf
 
 	## conf user
 	cd "$SBMCONFUSER" || exit
@@ -569,10 +570,10 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	sed -i "s/contact@mail.com/$EMAIL/g;" "$SBMCONFUSER"/"$USER"/config.ini
 
 	# verrouillage option parametre seedbox-manager
-	cp -f "$FILES"/sbm/header.html "$SBM"/public/themes/default/template/header.html
+	#cp -f "$FILES"/sbm/header.html "$SBM"/public/themes/default/template/header.html
 
 	chown -R "$WDATA" "$SBMCONFUSER"
-	chown -R "$WDATA" "$SBM"/public/themes/default/template/header.html
+	#chown -R "$WDATA" "$SBM"/public/themes/default/template/header.html
 	echo "" ; set "162" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 	# logrotate
