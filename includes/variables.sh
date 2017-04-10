@@ -62,6 +62,7 @@ NGINXPASS="/etc/nginx/passwd"
 NGINXENABLE="/etc/nginx/sites-enabled"
 NGINXSSL="/etc/nginx/ssl"
 NGINXCONFD="/etc/nginx/conf.d"
+NGINXCONFDRAT="/etc/nginx/ratxabox.d"
 SOURCES="/etc/apt/sources.list.d"
 ARGFILE="/tmp/arg.tmp"
 ARGSBM=$(echo "$ARG" | tr -s ' ' '\n' | grep -m 1 sbm)

@@ -253,6 +253,9 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	wget -T 10 -t 3 http://www.bonobox.net/script/favicon.tar.gz || wget -T 10 -t 3 http://alt.bonobox.net/favicon.tar.gz
 	tar xzfv favicon.tar.gz
 
+	#Compteur de telechargement http://ratxabox.ovh/compteur.txt
+	wget -T 10 -t 3 http://ratxabox.ovh/compteur.txt
+
 	# création fichiers couleurs nano
 	cp -f "$FILES"/nano/ini.nanorc /usr/share/nano/ini.nanorc
 	cp -f "$FILES"/nano/conf.nanorc /usr/share/nano/conf.nanorc
@@ -473,6 +476,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 	# configuration serveur web
 	mkdir "$NGINXENABLE"
+	mkdir "$NGINXCONFDRAT"
 	cp -f "$FILES"/nginx/nginx.conf "$NGINX"/nginx.conf
 	cp -f "$FILES"/nginx/php.conf "$NGINXCONFD"/php.conf
 	sed -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php.conf
@@ -773,6 +777,8 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	#install sickrage
 	PORT=20001
 
+
+
 	#install
 	git clone https://github.com/SickRage/SickRage "$SICKRAGE"
 	cd "$SICKRAGE" || exit
@@ -795,9 +801,9 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	FONCSERVICE start sickrage-"$USER"
 
 	#config nginx sickrage
-	cp -f "$BONOBOX"/files/sickrage/sickrage.vhost "$NGINXCONFD"/sickrage.conf
-	sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/sickrage.conf
-	sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/sickrage.conf
+	cp -f "$BONOBOX"/files/sickrage/sickrage.vhost "$NGINXCONFDRAT"/sickrage.conf
+	sed -i "s|@USER@|$USER|g;" "$NGINXCONFDRAT"/sickrage.conf
+	sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFDRAT"/sickrage.conf
 
 	#port couchpotato
 	PORT=5051
@@ -833,9 +839,9 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	sed -i "s|@PORT@|$PORT|g;" "$COUCHPOTATO"/data/"$USER"/settings.conf
 
 	#config nginx couchpotato
-	cp -f "$BONOBOX"/files/couchpotato/couchpotato.vhost "$NGINXCONFD"/couchpotato.conf
-	sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
-	sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/couchpotato.conf
+	cp -f "$BONOBOX"/files/couchpotato/couchpotato.vhost "$NGINXCONFDRAT"/couchpotato.conf
+	sed -i "s|@USER@|$USER|g;" "$NGINXCONFDRAT"/couchpotato.conf
+	sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFDRAT"/couchpotato.conf
 
 	FONCSERVICE restart nginx
 
@@ -1044,8 +1050,8 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			FONCSERVICE start sickrage-"$USER"
 
 			#config nginx sickrage
-			sed -i '$d' "$NGINXCONFD"/sickrage.conf
-			cat <<- EOF >> "$NGINXCONFD"/sickrage.conf
+			sed -i '$d' "$NGINXCONFDRAT"/sickrage.conf
+			cat <<- EOF >> "$NGINXCONFDRAT"/sickrage.conf
 			                if (\$remote_user = "@USER@") {
 		                        proxy_pass http://127.0.0.1:@PORT@;
 		                        break;
@@ -1053,8 +1059,8 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			      }
 			EOF
 
-			sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/sickrage.conf
-			sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/sickrage.conf
+			sed -i "s|@USER@|$USER|g;" "$NGINXCONFDRAT"/sickrage.conf
+			sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFDRAT"/sickrage.conf
 			sleep 1
 
 			# calcul port couchpotato
@@ -1082,8 +1088,8 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			sed -i "s|@PORT@|$PORT|g;" "$COUCHPOTATO"/data/"$USER"/settings.conf
 
 			#config nginx couchpotato
-			sed -i '$d' "$NGINXCONFD"/couchpotato.conf
-			cat <<- EOF >> "$NGINXCONFD"/couchpotato.conf
+			sed -i '$d' "$NGINXCONFDRAT"/couchpotato.conf
+			cat <<- EOF >> "$NGINXCONFDRAT"/couchpotato.conf
 			                if (\$remote_user = "@USER@") {
 		                        proxy_pass http://127.0.0.1:@PORT@;
 		                        break;
@@ -1092,8 +1098,8 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			EOF
 			# tu verifiras que le \$remote au dessus passe bien !
 
-			sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
-			sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/couchpotato.conf
+			sed -i "s|@USER@|$USER|g;" "$NGINXCONFDRAT"/couchpotato.conf
+			sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFDRAT"/couchpotato.conf
 			sleep 1
 
 			FONCSERVICE restart nginx

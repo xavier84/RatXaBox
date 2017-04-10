@@ -30,6 +30,11 @@ if FONCNO "$VALIDE"; then
 	exit 1
 fi
 
+#variable NGINXCONFDRAT
+if [ ! -f "$NGINXCONFDRAT"/sickrage.conf ]; then
+	NGINXCONFDRAT="$NGINXCONFD"
+fi
+
 if FONCYES "$VALIDE"; then
 
 	# Boucle ajout/suppression utilisateur
@@ -200,8 +205,8 @@ if FONCYES "$VALIDE"; then
 				FONCSCRIPT "$USER" sickrage
 
 				#config nginx sickrage
-				sed -i '$d' "$NGINXCONFD"/sickrage.conf
-				cat <<- EOF >> "$NGINXCONFD"/sickrage.conf
+				sed -i '$d' "$NGINXCONFDRAT"/sickrage.conf
+				cat <<- EOF >> "$NGINXCONFDRAT"/sickrage.conf
 				                if (\$remote_user = "@USER@") {
 				                        proxy_pass http://127.0.0.1:@PORT@;
 				                        break;
@@ -210,8 +215,8 @@ if FONCYES "$VALIDE"; then
 				EOF
 				# pareil verif du \$remote !
 
-				sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/sickrage.conf
-				sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/sickrage.conf
+				sed -i "s|@USER@|$USER|g;" "$NGINXCONFDRAT"/sickrage.conf
+				sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFDRAT"/sickrage.conf
 				sleep 1
 
 				# calcul port couchpotato
@@ -239,8 +244,8 @@ if FONCYES "$VALIDE"; then
 				sed -i "s|@PORT@|$PORT|g;" "$COUCHPOTATO"/data/"$USER"/settings.conf
 
 				#config nginx couchpotato
-				sed -i '$d' "$NGINXCONFD"/couchpotato.conf
-				cat <<- EOF >> "$NGINXCONFD"/couchpotato.conf
+				sed -i '$d' "$NGINXCONFDRAT"/couchpotato.conf
+				cat <<- EOF >> "$NGINXCONFDRAT"/couchpotato.conf
 				                if (\$remote_user = "@USER@") {
 		    		                    proxy_pass http://127.0.0.1:@PORT@;
 		    		                    break;
@@ -249,8 +254,8 @@ if FONCYES "$VALIDE"; then
 				EOF
 				# \$remote !
 
-				sed -i "s|@USER@|$USER|g;" "$NGINXCONFD"/couchpotato.conf
-				sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFD"/couchpotato.conf
+				sed -i "s|@USER@|$USER|g;" "$NGINXCONFDRAT"/couchpotato.conf
+				sed -i "s|@PORT@|$PORT|g;" "$NGINXCONFDRAT"/couchpotato.conf
 				sleep 1
 
 				FONCSERVICE restart nginx
@@ -502,8 +507,8 @@ if FONCYES "$VALIDE"; then
 
 			;;
 			10) # option
-				chmod a+x ./options.sh
-				bash ./options.sh
+				chmod a+x "$BONOBOX"/options.sh
+				bash "$BONOBOX"/options.sh
 
 			;;
 			7) # sortir gestion utilisateurs
