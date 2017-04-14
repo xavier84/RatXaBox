@@ -560,9 +560,9 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	chmod +x install.sh
 	./install.sh
 
-	#cp -f "$FILES"/nginx/php-manager.conf "$NGINXCONFD"/php-manager.conf
-	#sed -i "s|@SBM@|$SBM|g;" "$NGINXCONFD"/php-manager.conf
-	#sed -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php-manager.conf
+	cp -f "$FILES"/nginx/php-manager.conf "$NGINXCONFD"/php-manager.conf
+	sed -i "s|@SBM@|$SBM|g;" "$NGINXCONFD"/php-manager.conf
+	sed -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php-manager.conf
 
 	## conf user
 	cd "$SBMCONFUSER" || exit
