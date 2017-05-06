@@ -1,12 +1,17 @@
 #!/bin/bash
 
-INCLUDES="./includes"
+INCLUDES="/tmp/ratxabox/includes"
 . "$INCLUDES"/variables.sh
 . "$INCLUDES"/langues.sh
 . "$INCLUDES"/functions.sh
 
 clear
 . "$INCLUDES"/logo.sh
+
+#variable NGINXCONFDRAT
+if [ ! -f "$NGINXCONFDRAT"/sickrage.conf ]; then
+	NGINXCONFDRAT="$NGINXCONFD"
+fi
 
 
 # choix de streaming
@@ -15,6 +20,7 @@ clear
 	set "238" "812" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #emby
 	set "240" "814" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #openvpn
 	set "242" "820" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #filebot
+	set "244" "822" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #SyncThing
 	set "818" "258" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #sortir
 	set "260" ; FONCTXT "$1" ; echo -n -e "${CBLUE}$TXT1 ${CEND}"
 	read -r CHOIXS
@@ -59,6 +65,28 @@ clear
 		4)
 			wget https://raw.githubusercontent.com/xavier84/Script-xavier/master/filebot/filebot.sh
 			chmod +x filebot.sh && ./filebot.sh
+		;;
+
+		5)
+			set "184" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
+			read -r USER
+			curl -s https://syncthing.net/release-key.txt | apt-key add -
+			echo "deb http://apt.syncthing.net/ syncthing release" | tee /etc/apt/sources.list.d/syncthing.list
+			apt-get update
+			apt-get install syncthing
+
+			cp -f "$FILES"/syncthing/syncthing@.service /etc/systemd/system/syncthing@"$USER".service
+			mkdir -p /home/"$USER"/.config/syncthing
+			chown -R "$USER":"$USER" /home/"$USER"/.config
+			chmod -R 700 /home/"$USER"/.config
+			systemctl enable syncthing@"$USER".service
+			systemctl start syncthing@"$USER".service
+			sleep 3
+			sed -i -e 's/127.0.0.1/0.0.0.0/g' /home/"$USER"/.config/syncthing/config.xml
+			sed -i -e '2,20d' /home/"$USER"/.config/syncthing/config.xml
+			systemctl restart syncthing@"$USER".service
+			cp -f "$BONOBOX"/files/syncthing/syncthing.vhost "$NGINXCONFDRAT"/syncthing.conf
+			FONCSERVICE restart nginx
 		;;
 
 		0)

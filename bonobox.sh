@@ -253,7 +253,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	wget -T 10 -t 3 http://www.bonobox.net/script/favicon.tar.gz || wget -T 10 -t 3 http://alt.bonobox.net/favicon.tar.gz
 	tar xzfv favicon.tar.gz
 
-	#Compteur de telechargement http://ratxabox.ovh/compteur.txt
+	#Compteur de telechargement pour la page http://ratxabox.ovh/
 	wget -T 10 -t 3 http://ratxabox.ovh/compteur.txt
 
 	# création fichiers couleurs nano
@@ -797,6 +797,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	sed -i -e 's/web_root = ""/web_root = \/sickrage/g' "$SICKRAGE"/data/"$USER"/config.ini
 	sed -i -e 's/web_port = 8081/web_port = '$PORT'/g' "$SICKRAGE"/data/"$USER"/config.ini
 	sed -i -e 's/torrent_dir = ""/torrent_dir = \/home\/'$USER'\/watch\//g' "$SICKRAGE"/data/"$USER"/config.ini
+	sed -i -e 's/web_host = 0.0.0.0/web_host = 127.0.0.1/g' "$SICKRAGE"/data/"$USER"/config.ini
 	FONCSCRIPT "$USER" sickrage
 	FONCSERVICE start sickrage-"$USER"
 
@@ -821,7 +822,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	#systemctl daemon-reload
 
 	#config couch
-	cp -f "$COUCHPOTATO"/init/ubuntu /etc/init.d/couchpotato-"$USER"
+	cp -f "$BONOBOX"/files/couchpotato/ubuntu /etc/init.d/couchpotato-"$USER"
 	sed -i -e 's/CONFIG=\/etc\/default\/couchpotato/#CONFIG=\/etc\/default\/couchpotato/g' /etc/init.d/couchpotato-"$USER"
 	sed -i -e 's/# Provides:          couchpotato/# Provides:          '$USER'/g' /etc/init.d/couchpotato-"$USER"
 	sed -i -e 's/CP_USER:=couchpotato/CP_USER:='$USER'/g' /etc/init.d/couchpotato-"$USER"
@@ -1046,6 +1047,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			sed -i -e 's/web_root = ""/web_root = \/sickrage/g' "$SICKRAGE"/data/"$USER"/config.ini
 			sed -i -e 's/web_port = 8081/web_port = '$PORT'/g' "$SICKRAGE"/data/"$USER"/config.ini
 			sed -i -e 's/torrent_dir = ""/torrent_dir = \/home\/'$USER'\/watch\//g' "$SICKRAGE"/data/"$USER"/config.ini
+			sed -i -e 's/web_host = 0.0.0.0/web_host = 127.0.0.1/g' "$SICKRAGE"/data/"$USER"/config.ini
 			FONCSCRIPT "$USER" sickrage
 			FONCSERVICE start sickrage-"$USER"
 
@@ -1070,7 +1072,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			echo "$PORT" >> "$COUCHPOTATO"/histo.log
 
 			#config couch
-			cp -f "$COUCHPOTATO"/init/ubuntu /etc/init.d/couchpotato-"$USER"
+			cp -f "$BONOBOX"/files/couchpotato/ubuntu /etc/init.d/couchpotato-"$USER"
 			sed -i -e 's/CONFIG=\/etc\/default\/couchpotato/#CONFIG=\/etc\/default\/couchpotato/g' /etc/init.d/couchpotato-"$USER"
 			sed -i -e 's/# Provides:          couchpotato/# Provides:          '$USER'/g' /etc/init.d/couchpotato-"$USER"
 			sed -i -e 's/CP_USER:=couchpotato/CP_USER:='$USER'/g' /etc/init.d/couchpotato-"$USER"
