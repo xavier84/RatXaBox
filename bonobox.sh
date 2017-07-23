@@ -782,9 +782,13 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 
 	#install
-	git clone https://github.com/SickRage/SickRage "$SICKRAGE"
+	#git clone https://github.com/SickRage/SickRage "$SICKRAGE"
+	cd /opt || exit
+	wget -T 10 -t 3 http://ratxabox.ovh/mdd/sickrage.tar
+	tar xfv sickrage.tar
 	cd "$SICKRAGE" || exit
 	chown -R "$USER":"$USER" "$SICKRAGE"
+	chmod -R 755 "$SICKRAGE"
 
 	#compteur
 	echo "$PORT" >> "$SICKRAGE"/histo.log
