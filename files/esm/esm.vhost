@@ -1,0 +1,7 @@
+location ^~ /esm {
+		root /var/www;
+		include /etc/nginx/conf.d/php.conf;
+		include /etc/nginx/conf.d/cache.conf;
+		auth_basic "seedbox";
+		auth_basic_user_file "/etc/nginx/passwd/rutorrent_passwd";
+	}

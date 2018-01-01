@@ -3,7 +3,7 @@
 102           Bienvenue dans cette installation automatique de ruTorrent
 104         Le premier utilisateur sera l'administrateur de Seedbox-Manager,
 106      vous pourrez ajouter d'autres utilisateurs à la fin de l'installation.
-108 Entrez le nom du premier utilisateur (en minuscule):
+108
 110 Le nom de votre utilisateur doit être en minuscule,\nde plus de 3 lettres et sans caractères spéciaux.
 112 Entrez le mot de passe pour cet utilisateur, ou appuyez sur "
 114 Entrée
@@ -12,9 +12,9 @@
 120 comme mot de passe ? (o/n):
 122 Le mot de passe ne doit pas contenir de caractères spéciaux\net doit faire plus de 5 chiffres ou lettres.
 124 Entrez l'email de contact qui apparaîtra dans Seedbox-Manager:
-126 L'adresse mail n'est pas valide, merci de corrigez ou laissez vide.
+126 L'adresse mail n'est pas valide, merci de corriger ou laisser vide.
 128 Voulez vous installer un serveur FTP (o/n):
-130          Ce script doit être exécuté sur Debian 7 ou 8 exclusivement.
+130       Ce script doit être exécuté sur Debian 7/8/9 - 64 bits exclusivement.
 132 Mise à jour du serveur
 134      Fait !
 136 Installation des paquets essentiels
@@ -112,4 +112,26 @@
 818  0
 820 : Installer filebot
 822 : Installer SyncThing
+824 : Installer Sickrage
+826 : Installer Couchpotato
+828 : Installer Medusa
+830  8
+832  9
+834 : Installer eZ Server Monitor
+836 100
+838 101
+840 102
+842 103
+844 104
+846 105
+848 106
+850 107
+852 108
+854 109
+856 110
+858 111
 860 : Options supplémentaires
+862 112
+864 : Installer Jackett
+866 Tu utilises une ancienne version du script, utilise ces commandes
+

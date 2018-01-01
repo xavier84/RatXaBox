@@ -4,7 +4,7 @@
 
 * Multi-utilisateurs & Multilingue automatique en fonction de l'installation du serveur
 * Français, English, German, Pусский,  Español, Português
-* Nécessite Debian 7 ou 8 (32/64 bits) & un serveur fraîchement installé
+* Nécessite Debian 7/8/9 (64 bits) & un serveur fraîchement installé
 
 * Inclus VsFTPd (ftp & ftps sur le port 21), Fail2ban (avec conf nginx, ftp & ssh)
 * Seedbox-Manager, Auteurs: Magicalex, Hydrog3n et Backtoback
@@ -23,7 +23,7 @@ Merci Aliochka & Meister pour les conf de munin et VsFTPd
 
 Jedediah pour avoir joué avec le html/css du thème
 
-Aux traducteurs: Sophie, Spectre, Hardware, Zarev, SirGato, MiguelSam
+Aux traducteurs: Sophie, Spectre, Hardware, Zarev, SirGato, MiguelSam, Hierra
 
 ## Installation:
 Multilingue automatique
@@ -57,6 +57,9 @@ chmod a+x bonobox.sh && ./bonobox.sh --es
 
 # Português
 chmod a+x bonobox.sh && ./bonobox.sh --pt
+
+# Português do Brasil
+chmod a+x bonobox.sh && ./bonobox.sh --ptbr
 ```
 
 Pour gérer vos utilisateurs ultérieurement, il vous suffit de relancer le script

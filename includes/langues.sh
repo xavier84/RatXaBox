@@ -5,13 +5,13 @@ OPTS=$(getopt -o vhns: --long en,fr,de,ru,es,pt,ptbr -n 'parse-options' -- "$@")
 eval set -- "$OPTS"
 while true; do
 	case "$1" in
-			--en) GENLANG="en" ; break ;;
-			--fr) GENLANG="fr" ; break ;;
-			--de) GENLANG="de" ; break ;;
-			--ru) GENLANG="ru" ; break ;;
-			--es) GENLANG="es" ; break ;;
-			--pt) GENLANG="pt" ; break ;;
-			--ptbr) GENLANG="ptbr" ; break ;;
+			--en) GENLANG="en"; break ;;
+			--fr) GENLANG="fr"; break ;;
+			--de) GENLANG="de"; break ;;
+			--ru) GENLANG="ru"; break ;;
+			--es) GENLANG="es"; break ;;
+			--pt) GENLANG="pt"; break ;;
+			--ptbr) GENLANG="ptbr"; break ;;
 		*|\?)
 			BASELANG="${LANG:0:2}"
 			# detection auto
@@ -23,7 +23,10 @@ while true; do
 			elif [ "$BASELANG" = "pt" ]; then GENLANG="pt"
 			elif [ "$BASELANG" = "pt_BR" ]; then GENLANG="ptbr"
 			else
-				GENLANG="en" ; fi ; break ;;
+				GENLANG="en"
+			fi
+			break
+		;;
 	esac
 done
 

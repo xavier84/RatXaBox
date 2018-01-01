@@ -7,42 +7,47 @@ CRED="${CSI}1;31m"
 CGREEN="${CSI}1;32m"
 CYELLOW="${CSI}1;33m"
 CBLUE="${CSI}1;34m"
+CMAG="${CSI}1;35m"
 
 ARG="$*"
 VERSION=$(cat /etc/debian_version)
 
-if [[ $VERSION =~ 7. ]]; then
+if [[ "$VERSION" =~ 7.* ]]; then
 	DEBNUMBER="Debian_7.0.deb"
 	DEBNAME="wheezy"
 	PHPPATH="/etc/php5"
 	PHPNAME="php5"
 	PHPSOCK="/var/run/php5-fpm.sock"
-elif [[ $VERSION =~ 8. ]]; then
+	LIBZEN0NAME="libzen0"
+	LIBMEDIAINFO0NAME="libmediainfo0"
+
+elif [[ "$VERSION" =~ 8.* ]]; then
 	DEBNUMBER="Debian_8.0.deb"
 	DEBNAME="jessie"
-	# PHPPATH="/etc/php/7.0"
-	# PHPNAME="php7.0"
-	# PHPSOCK="/run/php/php7.0-fpm.sock"
 	PHPPATH="/etc/php5"
 	PHPNAME="php5"
 	PHPSOCK="/var/run/php5-fpm.sock"
-fi
+	LIBZEN0NAME="libzen0"
+	LIBMEDIAINFO0NAME="libmediainfo0"
 
-if [[ $(uname -m) == i686 ]]; then
-	SYS="i386"
-elif [[ $(uname -m) == x86_64 ]]; then
-	SYS="amd64"
+elif [[ "$VERSION" =~ 9.* ]]; then
+	DEBNUMBER="Debian_9.0.deb"
+	DEBNAME="stretch"
+	PHPPATH="/etc/php/7.1"
+	PHPNAME="php7.1"
+	PHPSOCK="/run/php/php7.1-fpm.sock"
+	LIBZEN0NAME="libzen0v5"
+	LIBMEDIAINFO0NAME="libmediainfo0v5"
+
 fi
 
 LIBTORRENT="0.13.6"
 RTORRENT="0.9.6"
-# DEBMULTIMEDIA="2016.8.1"
-NVM="0.33.1"
-NODE="7.8.0"
 SBMVERSION="3.0.1"
-LIBZEN0="0.4.35"
-LIBMEDIAINFO0="0.7.94"
-MEDIAINFO="0.7.94"
+
+LIBZEN0="0.4.37"
+LIBMEDIAINFO0="17.10"
+MEDIAINFO="17.10"
 
 RUTORRENT="/var/www/rutorrent"
 RUPLUGINS="/var/www/rutorrent/plugins"
@@ -72,6 +77,7 @@ ARGREBOOT=$(echo "$ARG" | tr -s ' ' '\n' | grep -m 1 reboot)
 WDATA="www-data:www-data"
 SICKRAGE="/opt/sickrage"
 COUCHPOTATO="/opt/couchpotato"
+MEDUSA="/opt/medusa"
 REBOOT="/var/www/reboot"
 
 RAPPORT="/tmp/rapport.txt"
@@ -81,3 +87,5 @@ NGINX_VERSION=$(2>&1 nginx -v | grep -Eo "[0-9.+]{1,}")
 RUTORRENT_VERSION=$(grep version: < /var/www/rutorrent/js/webui.js | grep -E -o "[0-9]\.[0-9]{1,}")
 RTORRENT_VERSION=$(rtorrent -h | grep -E -o "[0-9]\.[0-9].[0-9]{1,}")
 PHP_VERSION=$(php -v | cut -c 1-7 | grep PHP | cut -c 5-7)
+CPU=$(sed '/^$/d' < /proc/cpuinfo | grep -m 1 'model name' | cut -c14-)
+PASTEBIN="paste.ubuntu.com"
