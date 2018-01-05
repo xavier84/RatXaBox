@@ -1,6 +1,6 @@
 # Script d'installation ruTorrent / Nginx
 
-![logo](https://raw.github.com/exrat/rutorrent-bonobox/master/files/bonobox.png)
+![logo](https://raw.github.com/xavier84/RatXaBox/master/files/ratxabox.png)
 
 * Multi-utilisateurs & Multilingue automatique en fonction de l'installation du serveur
 * Français, English, German, Pусский,  Español, Português
@@ -16,6 +16,7 @@ Tiré du tutoriel de Magicalex pour mondedie.fr disponible ici:
 [Aide, support & plus si affinités à la même adresse !](http://mondedie.fr/)
 
 **Auteur :** Ex_Rat
+**Modifié par :** Xavier
 
 Merci Aliochka & Meister pour les conf de munin et VsFTPd
 
@@ -36,7 +37,7 @@ git clone https://github.com/xavier84/RatXaBox ratxabox
 cd ratxabox
 chmod a+x bonobox.sh && ./bonobox.sh
 ```
-![caps1](https://raw.github.com/exrat/rutorrent-bonobox/master/files/caps_script01.png)
+
 
 **Vous pouvez aussi forcer la langue de votre choix:**
 ```
@@ -64,7 +65,7 @@ chmod a+x bonobox.sh && ./bonobox.sh --ptbr
 
 Pour gérer vos utilisateurs ultérieurement, il vous suffit de relancer le script
 
-![caps2](https://raw.github.com/exrat/rutorrent-bonobox/master/files/caps_script02.png)
+![gestion](https://raw.github.com/xavier84/RatXaBox/master/files/gestion.png)
 
 ### Disclaimer
 Ce script est proposé à des fins d'expérimentation uniquement, le téléchargement d’oeuvre copyrightées est illégal.
