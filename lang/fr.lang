@@ -118,20 +118,20 @@
 830  8
 832  9
 834 : Installer eZ Server Monitor
-836 100
-838 101
-840 102
-842 103
-844 104
-846 105
-848 106
-850 107
-852 108
-854 109
-856 110
-858 111
+836 50
+838 51
+840 52
+842 53
+844 54
+846 55
+848 56
+850 57
+852 58
+854 59
+856 60
+858 61
 860 : Options supplémentaires
-862 112
+862 62
 864 : Installer Jackett
 866 Tu utilises une ancienne version du script, utilise ces commandes
 

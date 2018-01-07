@@ -61,16 +61,16 @@ if FONCYES "$VALIDE"; then
 		set "294" "258"; FONCTXT "$1" "$2"; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
 		echo ""
 		echo -e "${CMAG}*****RatXaBox*****${CEND}"
-		set "836" "810" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #plex 100
-		set "838" "812" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #emby 101
-		set "840" "814" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #openvpn 102
-		set "842" "820" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #filebot 103
-		set "844" "822" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #SyncThing 104
-		set "846" "824" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #sickrage 105
-		set "848" "826" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #couchpotato 106
-		set "850" "828" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #medusa 107
-		set "852" "834" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #esm 108
-		set "854" "864" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #jackett 109
+		set "836" "810" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #plex 50
+		set "838" "812" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #emby 51
+		set "840" "814" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #openvpn 52
+		set "842" "820" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #filebot 53
+		set "844" "822" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #SyncThing 54
+		set "846" "824" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #sickrage 55
+		set "848" "826" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #couchpotato 56
+		set "850" "828" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #medusa 57
+		set "852" "834" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #esm 58
+		set "854" "864" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}" #jackett 59
 		set "260"; FONCTXT "$1"; echo -n -e "${CBLUE}$TXT1 ${CEND}"
 		read -r OPTION
 
@@ -434,7 +434,7 @@ if FONCYES "$VALIDE"; then
 				break
 			;;
 
-			100)
+			50)
 				apt-get install apt-transport-https -y
 				echo "deb https://downloads.plex.tv/repo/deb/ public main" > /etc/apt/sources.list.d/plexmediaserver.list
 				wget -q https://downloads.plex.tv/plex-keys/PlexSign.key -O - | apt-key add -
@@ -447,7 +447,7 @@ if FONCYES "$VALIDE"; then
 				fi
 			;;
 
-			101)
+			51)
 				#ajout depot
 				echo "deb http://download.mono-project.com/repo/debian wheezy-apache24-compat main" | tee -a /etc/apt/sources.list.d/mono-xamarin.list
 				echo "deb http://download.mono-project.com/repo/debian wheezy-libjpeg62-compat main" | tee -a /etc/apt/sources.list.d/mono-xamarin.list
@@ -480,17 +480,17 @@ if FONCYES "$VALIDE"; then
 			;;
 
 
-			102)
+			52)
 				wget https://raw.githubusercontent.com/xavier84/Script-xavier/master/openvpn/openvpn-install.sh
 				chmod +x openvpn-install.sh && ./openvpn-install.sh
 			;;
 
-			103)
+			53)
 				wget https://raw.githubusercontent.com/xavier84/Script-xavier/master/filebot/filebot.sh
 				chmod +x filebot.sh && ./filebot.sh
 			;;
 
-			104)
+			54)
 				set "184" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 				read -r USER
 				curl -s https://syncthing.net/release-key.txt | apt-key add -
@@ -512,7 +512,7 @@ if FONCYES "$VALIDE"; then
 				FONCSERVICE restart nginx
 			;;
 
-			105)
+			55)
 				set "184" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 				read -r USER
 				if [ ! -d "$SICKRAGE" ];then
@@ -561,7 +561,7 @@ if FONCYES "$VALIDE"; then
 
 			;;
 
-			105)
+			55)
 				set "184" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 				read -r USER
 				if [ ! -d "$COUCHPOTATO" ];then
@@ -615,7 +615,7 @@ if FONCYES "$VALIDE"; then
 				FONCSERVICE restart nginx
 			;;
 
-			107)
+			57)
 				set "184" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 				read -r USER
 				if [ ! -d "$MEDUSA" ];then
@@ -636,6 +636,7 @@ if FONCYES "$VALIDE"; then
 				chmod +x /etc/init.d/medusa-"$USER"
 				sed -i -e 's/xataz/'$USER'/g' /etc/init.d/medusa-"$USER"
 				sed -i -e 's/MD_USER=/MD_USER='$USER'/g' /etc/init.d/medusa-"$USER"
+				systemctl daemon-reload
 				/etc/init.d/medusa-"$USER" start && sleep 5 && /etc/init.d/medusa-"$USER" stop
 				sleep 1
 				sed -i -e 's/web_root = ""/web_root = \/medusa/g' "$MEDUSA"/data/"$USER"/config.ini
@@ -663,14 +664,14 @@ if FONCYES "$VALIDE"; then
 				FONCSERVICE restart nginx
 			;;
 
-			108)
+			58)
 				cp -R "$FILES"/esm/esm "$NGINXWEB"/esm
 				chown -R "$WDATA" "$NGINXWEB"/esm
 				cp -f "$FILES"/esm/esm.vhost "$NGINXCONFDRAT"/esm.conf
 				FONCSERVICE restart nginx
 			;;
 
-			109)
+			59)
 				set "184" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 				read -r USER
 				aptitude install dirmngr
