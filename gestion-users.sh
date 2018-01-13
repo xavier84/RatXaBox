@@ -539,6 +539,7 @@ if FONCYES "$VALIDE"; then
 				sed -i -e 's/web_port = 8081/web_port = '$PORT'/g' "$SICKRAGE"/data/"$USER"/config.ini
 				sed -i -e 's/torrent_dir = ""/torrent_dir = \/home\/'$USER'\/watch\//g' "$SICKRAGE"/data/"$USER"/config.ini
 				sed -i -e 's/web_host = 0.0.0.0/web_host = 127.0.0.1/g' "$SICKRAGE"/data/"$USER"/config.ini
+				systemctl daemon-reload
 				FONCSCRIPT "$USER" sickrage
 				FONCSERVICE start sickrage-"$USER"
 
@@ -561,7 +562,7 @@ if FONCYES "$VALIDE"; then
 
 			;;
 
-			55)
+			56)
 				set "184" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 				read -r USER
 				if [ ! -d "$COUCHPOTATO" ];then
@@ -585,6 +586,7 @@ if FONCYES "$VALIDE"; then
 				sed -i -e 's/CP_DATA:=\/var\/opt\/couchpotato/CP_DATA:=\/opt\/couchpotato\/data\/'$USER'/g' /etc/init.d/couchpotato-"$USER"
 				sed -i -e 's/CP_PIDFILE:=\/var\/run\/couchpotato\/couchpotato.pid/CP_PIDFILE:=\/opt\/couchpotato\/data\/'$USER'\/couchpotato.pid/g' /etc/init.d/couchpotato-"$USER"
 				chmod +x /etc/init.d/couchpotato-"$USER"
+				systemctl daemon-reload
 				FONCSCRIPT "$USER" couchpotato
 				/etc/init.d/couchpotato-"$USER" start && sleep 5 && /etc/init.d/couchpotato-"$USER" stop
 				sleep 1
