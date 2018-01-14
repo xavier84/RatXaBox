@@ -705,6 +705,7 @@ if FONCYES "$VALIDE"; then
 
 				cp -f "$BONOBOX"/files/jackett/jackett /etc/init.d/jackett
 				sed -i -e "s/RUN_AS=/RUN_AS=$USER/g" /etc/init.d/jackett
+				systemctl daemon-reload
 				chmod +x /etc/init.d/jackett
 				update-rc.d jackett defaults
 				FONCSERVICE start jackett && sleep 1 && FONCSERVICE stop jackett

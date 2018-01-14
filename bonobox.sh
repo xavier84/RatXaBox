@@ -221,7 +221,8 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		libmms0 \
 		pastebinit \
 		sox \
-		libsox-fmt-mp3
+		libsox-fmt-mp3\
+		cpufrequtils
 
 		if [[ "$VERSION" =~ 7.* ]]; then
 			apt-get install -y \
@@ -245,6 +246,13 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		fi
 
 	echo ""; set "136" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+
+	#gouverneur
+	cpufreq-set -r -g performance
+
+	if [ ! -f /etc/default/cpufrequtils ]; then
+		cp -f "$BONOBOX"/files/cpufreq/cpufrequtils /etc/default/cpufrequtils
+	fi
 
 	# génération clé 2048 bits
 	openssl dhparam -out dhparams.pem 2048 >/dev/null 2>&1 &
