@@ -502,9 +502,13 @@ if FONCYES "$VALIDE"; then
 				chmod -R 700 /home/"$USER"/.config
 				systemctl enable syncthing@"$USER".service
 				systemctl start syncthing@"$USER".service
-				sleep 3
+				sleep 5
+				#fix bug
+				if [ -f /home/"$USER"/.config/syncthing/config.xml ]; then
+					rm -f /home/"$USER"/.config/syncthing/config.xml
+				fi
 				sed -i -e 's/127.0.0.1/0.0.0.0/g' /home/"$USER"/.config/syncthing/config.xml
-				sed -i -e '2,20d' /home/"$USER"/.config/syncthing/config.xml
+				#sed -i -e '2,20d' /home/"$USER"/.config/syncthing/config.xml
 				systemctl restart syncthing@"$USER".service
 				cp -f "$BONOBOX"/files/syncthing/syncthing.vhost "$NGINXCONFDRAT"/syncthing.conf
 				FONCSERVICE restart nginx
