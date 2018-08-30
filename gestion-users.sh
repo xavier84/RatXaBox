@@ -497,6 +497,7 @@ if FONCYES "$VALIDE"; then
 				apt-get install syncthing
 
 				cp -f "$FILES"/syncthing/syncthing@.service /etc/systemd/system/syncthing@"$USER".service
+				systemctl daemon-reload
 				mkdir -p /home/"$USER"/.config/syncthing
 				chown -R "$USER":"$USER" /home/"$USER"/.config
 				chmod -R 700 /home/"$USER"/.config
