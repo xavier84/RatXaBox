@@ -502,6 +502,7 @@ if FONCYES "$VALIDE"; then
 				chmod -R 700 /home/"$USER"/.config
 				#fix bug
 				if [ -f /home/"$USER"/.config/syncthing/config.xml ]; then
+					systemctl stop syncthing@"$USER".service
 					rm -f /home/"$USER"/.config/syncthing/config.xml
 				fi
 				systemctl enable syncthing@"$USER".service
