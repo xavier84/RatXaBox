@@ -520,8 +520,10 @@ if FONCYES "$VALIDE"; then
 				set "184" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 				read -r USER
 				if [ ! -d "$SICKRAGE" ];then
-					apt-get install -y git-core python python-cheetah
+					apt-get install -y git-core python python-cheetah python-pip
 					git clone https://github.com/SickRage/SickRage "$SICKRAGE"
+					cd "$SICKRAGE"
+					pip  install -r requirements.txt
 					chown -R "$USER":"$USER" "$SICKRAGE"
 					chmod -R 755 "$SICKRAGE"
 					#compteur
@@ -693,7 +695,7 @@ if FONCYES "$VALIDE"; then
 					echo "deb http://download.mono-project.com/repo/debian stretch main" | tee /etc/apt/sources.list.d/mono-official.list
 				fi
 
-				aptitude update && aptitude install -y  mono-xsp4
+				aptitude update && aptitude install -y  mono-xsp4 mono-devel libcurl4-openssl-dev
 
 
 				LATEST_RELEASE=$(curl -L -s -H 'Accept: application/json' https://github.com/Jackett/Jackett/releases/latest)
