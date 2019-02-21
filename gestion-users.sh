@@ -501,6 +501,8 @@ if FONCYES "$VALIDE"; then
 				mkdir -p /home/"$USER"/.config/syncthing
 				chown -R "$USER":"$USER" /home/"$USER"/.config
 				chmod -R 700 /home/"$USER"/.config
+				mkdir -p /home/"$USER"/Sync
+				chown -R "$USER":"$USER" /home/"$USER"/Sync
 				#fix bug
 				if [ -f /home/"$USER"/.config/syncthing/config.xml ]; then
 					systemctl stop syncthing@"$USER".service
