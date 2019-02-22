@@ -474,6 +474,8 @@ if FONCYES "$VALIDE"; then
 				if [ ! -d "$RUPLUGINS"/linkemby ];then
 					git clone https://github.com/xavier84/linkemby "$RUPLUGINS"/linkemby
 					chown -R "$WDATA" "$RUPLUGINS"/linkemby
+					FONCIP
+					sed -i "s/@IP@/$IP/g;" "$RUPLUGINS"/linkemby/conf.php
 				fi
 			;;
 
