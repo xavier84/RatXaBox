@@ -178,6 +178,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		openssl \
 		apt-utils \
 		python \
+		python-pip \
 		build-essential \
 		libssl-dev \
 		pkg-config \
@@ -369,6 +370,9 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	for PLUGINS in 'logoff' 'chat' 'lbll-suite' 'linklogs' 'nfo' 'titlebar' 'filemanager' 'fileshare' 'ratiocolor' 'pausewebui'; do
 		cp -R "$BONOBOX"/plugins/"$PLUGINS" "$RUPLUGINS"/
 	done
+
+	# installation cfscrape pour _cloudflare
+	pip install cloudscraper
 
 	# plugin seedbox-manager
 	git clone https://github.com/Hydrog3n/linkseedboxmanager.git
