@@ -347,7 +347,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	"$CMDECHO" ""; set "144" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1 $RTORRENT${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# création des dossiers
-	"$CMDSU" "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session ~/.backup-session'
+	"$CMDSU" "$USER" -c ""$CMDMKDIR" -p ~/watch ~/torrents ~/.session ~/.backup-session"
 
 	# création dossier scripts perso
 	"$CMDMKDIR" "$SCRIPT"
@@ -626,9 +626,9 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	"$CMDCRONTAB" -l > rtorrentdem
 
 	"$CMDCAT" <<- EOF >> rtorrentdem
-		$UPGEOIP 2 9 * * sh $SCRIPT/updateGeoIP.sh > /dev/null 2>&1
-		0 */2 * * * sh $SCRIPT/logserver.sh > /dev/null 2>&1
-		0 5 * * * sh $SCRIPT/backup-session.sh > /dev/null 2>&1
+		$UPGEOIP 2 9 * * $CMDBASH $SCRIPT/updateGeoIP.sh > /dev/null 2>&1
+		0 */2 * * * $CMDBASH $SCRIPT/logserver.sh > /dev/null 2>&1
+		0 5 * * * $CMDBASH $SCRIPT/backup-session.sh > /dev/null 2>&1
 	EOF
 
 	"$CMDCRONTAB" rtorrentdem
@@ -859,7 +859,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			EMAIL=$("$CMDSED" -n "1 p" "$RUTORRENT"/"$HISTOLOG".log)
 
 			# création de dossier
-			"$CMDSU" "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session ~/.backup-session'
+			"$CMDSU" "$USER" -c ""$CMDMKDIR" -p ~/watch ~/torrents ~/.session ~/.backup-session"
 
 			# calcul port
 			FONCPORT
