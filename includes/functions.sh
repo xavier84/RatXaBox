@@ -1,13 +1,13 @@
 #!/bin/bash
 
 FONCCONTROL () {
-	if [[ $(uname -m) == x86_64 ]] && [[ "$VERSION" = 7.* ]] || [[ "$VERSION" = 8.* ]] || [[ "$VERSION" = 9.* ]]; then
-		if [ "$(id -u)" -ne 0 ]; then
-			echo ""; set "100"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"; echo ""
+	if [[ $("$CMDUNAME" -m) == x86_64 ]] &&  [[ "$VERSION" = 9.* ]] || [[ "$VERSION" = 10.* ]]; then
+		if [ "$("$CMDID" -u)" -ne 0 ]; then
+			"$CMDECHO" ""; set "100"; FONCTXT "$1"; "$CMDECHO" -e "${CRED}$TXT1${CEND}"; "$CMDECHO" ""
 			exit 1
 		fi
 	else
-		echo ""; set "130"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"; echo ""
+		"$CMDECHO" ""; set "130"; FONCTXT "$1"; "$CMDECHO" -e "${CRED}$TXT1${CEND}"; "$CMDECHO" ""
 		exit 1
 	fi
 }
@@ -16,37 +16,38 @@ FONCBASHRC () {
 	unalias cp 2>/dev/null
 	unalias rm 2>/dev/null
 	unalias mv 2>/dev/null
+	export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 }
 
 FONCUSER () {
 	while :; do
-		set "214"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1 ${CEND}"
+		set "214"; FONCTXT "$1"; "$CMDECHO" -e "${CGREEN}$TXT1 ${CEND}"
 		read -r TESTUSER
-		grep -w "$TESTUSER" /etc/passwd &> /dev/null
+		"$CMDGREP" -w "$TESTUSER" /etc/passwd &> /dev/null
 		if [ $? -eq 1 ]; then
 			if [[ "$TESTUSER" =~ ^[a-z0-9]{3,}$ ]]; then
 				USER="$TESTUSER"
 				# shellcheck disable=SC2104
 				break
 			else
-				echo ""; set "110"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"; echo ""
+				"$CMDECHO" ""; set "110"; FONCTXT "$1"; "$CMDECHO" -e "${CRED}$TXT1${CEND}"; "$CMDECHO" ""
 			fi
 		else
-			echo ""; set "198"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"; echo ""
+			"$CMDECHO" ""; set "198"; FONCTXT "$1"; "$CMDECHO" -e "${CRED}$TXT1${CEND}"; "$CMDECHO" ""
 		fi
 	done
 }
 
 FONCPASS () {
 	while :; do
-		set "112" "114" "116"; FONCTXT "$1" "$2" "$3"; echo -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$TXT2${CEND} ${CGREEN}$TXT3 ${CEND}"
+		set "112" "114" "116"; FONCTXT "$1" "$2" "$3"; "$CMDECHO" -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$TXT2${CEND} ${CGREEN}$TXT3 ${CEND}"
 		read -r REPPWD
 		if [ "$REPPWD" = "" ]; then
-			AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
-			echo ""; set "118" "120"; FONCTXT "$1" "$2"; echo  -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWD${CEND} ${CGREEN}$TXT2 ${CEND}"
+			AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | "$CMDHEAD" -c 8)
+			"$CMDECHO" ""; set "118" "120"; FONCTXT "$1" "$2"; "$CMDECHO"  -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWD${CEND} ${CGREEN}$TXT2 ${CEND}"
 			read -r REPONSEPWD
 			if FONCNO "$REPONSEPWD"; then
-				echo
+				"$CMDECHO"
 			else
 				USERPWD="$AUTOPWD"
 				# shellcheck disable=SC2104
@@ -59,24 +60,20 @@ FONCPASS () {
 				# shellcheck disable=SC2104
 				break
 			else
-				echo ""; set "122"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"; echo ""
+				"$CMDECHO" ""; set "122"; FONCTXT "$1"; "$CMDECHO" -e "${CRED}$TXT1${CEND}"; "$CMDECHO" ""
 			fi
 		fi
 	done
 }
 
 FONCIP () {
-	if [[ "$VERSION" = 7.* ]] || [[ "$VERSION" = 8.* ]]; then
-		IP=$(ifconfig | grep "inet ad" | cut -f2 -d: | awk '{print $1}' | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
-
-	elif [[ "$VERSION" = 9.* ]]; then
-		IP=$(ip -4 addr | grep "inet" | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | awk '{print $2}' | cut -d/ -f1)
-	fi
+	"$CMDAPTGET" install -y net-tools
+	IP=$("$CMDIP" -4 addr | "$CMDGREP" "inet" | "$CMDGREP" -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | "$CMDAWK" '{print $2}' | "$CMDCUT" -d/ -f1)
 
 	if [ "$IP" = "" ]; then
-		IP=$(wget -qO- ipv4.icanhazip.com)
+		IP=$("$CMDWGET" -qO- ipv4.icanhazip.com)
 			if [ "$IP" = "" ]; then
-				IP=$(wget -qO- ipv4.bonobox.net)
+				IP=$("$CMDWGET" -qO- ipv4.bonobox.net)
 				if [ "$IP" = "" ]; then
 					IP=x.x.x.x
 				fi
@@ -85,13 +82,22 @@ FONCIP () {
 }
 
 FONCPORT () {
-	HISTO=$(wc -l < "$1"/histo.log)
-	PORT=$(( $(($2))+HISTO ))
+	HISTO=$("$CMDWC" -l < "$RUTORRENT"/"$HISTOLOG".log)
+	# shellcheck disable=SC2034
+	PORT=$(( 5001+HISTO ))
 }
 
+#FONCPORT () {
+#	HISTO=$("$CMDWC" -l < "$1"/histo.log)
+#	PORT=$(( $(($2))+HISTO ))
+#}
+
+##########
+# FONCSCRIPT ça je n'ai pas ou plus chez moi, je ne sais pas si tu t'en sers, sinon tu vires
 FONCSCRIPT () {
-	update-rc.d "$2"-"$1" defaults
+	"$CMDUPDATERC" "$2"-"$1" defaults
 }
+##########
 
 FONCYES () {
 	[ "$1" = "y" ] || [ "$1" = "Y" ] || [ "$1" = "o" ] || [ "$1" = "O" ] || [ "$1" = "j" ] || [ "$1" = "J" ] || [ "$1" = "д" ] || [ "$1" = "s" ] || [ "$1" = "S" ]
@@ -102,44 +108,41 @@ FONCNO () {
 }
 
 FONCTXT () {
-	TXT1="$(grep "$1" "$BONOBOX"/lang/"$GENLANG".lang | cut -c5-)"
-	TXT2="$(grep "$2" "$BONOBOX"/lang/"$GENLANG".lang | cut -c5-)"
+	TXT1="$("$CMDGREP" "$1" "$BONOBOX"/lang/"$GENLANG".lang | "$CMDCUT" -c5-)"
+	TXT2="$("$CMDGREP" "$2" "$BONOBOX"/lang/"$GENLANG".lang | "$CMDCUT" -c5-)"
 	# shellcheck disable=SC2034
-	TXT3="$(grep "$3" "$BONOBOX"/lang/"$GENLANG".lang | cut -c5-)"
+	TXT3="$("$CMDGREP" "$3" "$BONOBOX"/lang/"$GENLANG".lang | "$CMDCUT" -c5-)"
 }
 
 FONCSERVICE () {
-	if [[ "$VERSION" = 7.* ]]; then
-		service "$2" "$1"
-	elif [[ "$VERSION" = 8.* ]] || [[ "$VERSION" = 9.* ]]; then
-		systemctl "$1" "$2".service
-	fi
-} # FONCSERVICE $1 {start/stop/restart} $2 {nom service}
+	"$CMDSYSTEMCTL" "$1" "$2".service
+}
+# FONCSERVICE $1 {start/stop/restart} $2 {nom service}
 
 FONCFSUSER () {
-	FSUSER=$(grep /home/"$1" /etc/fstab | cut -c 6-9)
+	FSUSER=$("$CMDGREP" /home/"$1" /etc/fstab | "$CMDCUT" -c 6-9)
 	if [ "$FSUSER" = "" ]; then
-		echo
+		"$CMDECHO"
 	else
-		tune2fs -m 0 /dev/"$FSUSER" &> /dev/null
-		mount -o remount /home/"$1" &> /dev/null
+		"$CMDTUNE2FS" -m 0 /dev/"$FSUSER" &> /dev/null
+		"$CMDMOUNT" -o remount /home/"$1" &> /dev/null
 	fi
 }
 
 FONCMUNIN () {
-	cp -f "$MUNIN"/rtom_mem "$MUNIN"/rtom_"$1"_mem
-	cp -f "$MUNIN"/rtom_peers "$MUNIN"/rtom_"$1"_peers
-	cp -f "$MUNIN"/rtom_spdd "$MUNIN"/rtom_"$1"_spdd
-	cp -f "$MUNIN"/rtom_vol "$MUNIN"/rtom_"$1"_vol
+	"$CMDCP" -f "$MUNIN"/rtom_mem "$MUNIN"/rtom_"$1"_mem
+	"$CMDCP" -f "$MUNIN"/rtom_peers "$MUNIN"/rtom_"$1"_peers
+	"$CMDCP" -f "$MUNIN"/rtom_spdd "$MUNIN"/rtom_"$1"_spdd
+	"$CMDCP" -f "$MUNIN"/rtom_vol "$MUNIN"/rtom_"$1"_vol
 
-	chmod 755 "$MUNIN"/rtom_*
+	"$CMDCHMOD" 755 "$MUNIN"/rtom_*
 
-	ln -s "$MUNIN"/rtom_"$1"_mem /etc/munin/plugins/rtom_"$1"_mem
-	ln -s "$MUNIN"/rtom_"$1"_peers /etc/munin/plugins/rtom_"$1"_peers
-	ln -s "$MUNIN"/rtom_"$1"_spdd /etc/munin/plugins/rtom_"$1"_spdd
-	ln -s "$MUNIN"/rtom_"$1"_vol /etc/munin/plugins/rtom_"$1"_vol
+	"$CMDLN" -s "$MUNIN"/rtom_"$1"_mem /etc/munin/plugins/rtom_"$1"_mem
+	"$CMDLN" -s "$MUNIN"/rtom_"$1"_peers /etc/munin/plugins/rtom_"$1"_peers
+	"$CMDLN" -s "$MUNIN"/rtom_"$1"_spdd /etc/munin/plugins/rtom_"$1"_spdd
+	"$CMDLN" -s "$MUNIN"/rtom_"$1"_vol /etc/munin/plugins/rtom_"$1"_vol
 
-	cat <<- EOF >> /etc/munin/plugin-conf.d/munin-node
+	"$CMDCAT" <<- EOF >> /etc/munin/plugin-conf.d/munin-node
 
 		[rtom_@USER@_*]
 		user @USER@
@@ -149,12 +152,12 @@ FONCMUNIN () {
 		env.category @USER@
 	EOF
 
-	sed -i "s/@USER@/$1/g;" /etc/munin/plugin-conf.d/munin-node
-	sed -i "s/@PORT@/$2/g;" /etc/munin/plugin-conf.d/munin-node
+	"$CMDSED" -i "s/@USER@/$1/g;" /etc/munin/plugin-conf.d/munin-node
+	"$CMDSED" -i "s/@PORT@/$2/g;" /etc/munin/plugin-conf.d/munin-node
 
 	FONCSERVICE restart munin-node
 
-	cat <<- EOF >> /etc/munin/munin.conf
+	"$CMDCAT" <<- EOF >> /etc/munin/munin.conf
 
 		rtom_@USER@_peers.graph_width 700
 		rtom_@USER@_peers.graph_height 500
@@ -166,50 +169,50 @@ FONCMUNIN () {
 		rtom_@USER@_mem.graph_height 500
 	EOF
 
-	sed -i "s/@USER@/$1/g;" /etc/munin/munin.conf
+	"$CMDSED" -i "s/@USER@/$1/g;" /etc/munin/munin.conf
 }
 
 FONCGRAPH () {
-	for PICS in 'mem-day' 'mem-week' 'mem-month'; do cp -f "$BONOBOX"/graph/img/tmp.png "$MUNINROUTE"/rtom_"$1"_"$PICS".png; done
-	for PICS in 'peers-day' 'peers-week' 'peers-month'; do cp -f "$BONOBOX"/graph/img/tmp.png "$MUNINROUTE"/rtom_"$1"_"$PICS".png; done
-	for PICS in 'spdd-day' 'spdd-week' 'spdd-month'; do cp -f "$BONOBOX"/graph/img/tmp.png "$MUNINROUTE"/rtom_"$1"_"$PICS".png; done
-	for PICS in 'vol-day' 'vol-week' 'vol-month'; do cp -f "$BONOBOX"/graph/img/tmp.png "$MUNINROUTE"/rtom_"$1"_"$PICS".png; done
+	for PICS in 'mem-day' 'mem-week' 'mem-month'; do "$CMDCP" -f "$BONOBOX"/graph/img/tmp.png "$MUNINROUTE"/rtom_"$1"_"$PICS".png; done
+	for PICS in 'peers-day' 'peers-week' 'peers-month'; do "$CMDCP" -f "$BONOBOX"/graph/img/tmp.png "$MUNINROUTE"/rtom_"$1"_"$PICS".png; done
+	for PICS in 'spdd-day' 'spdd-week' 'spdd-month'; do "$CMDCP" -f "$BONOBOX"/graph/img/tmp.png "$MUNINROUTE"/rtom_"$1"_"$PICS".png; done
+	for PICS in 'vol-day' 'vol-week' 'vol-month'; do "$CMDCP" -f "$BONOBOX"/graph/img/tmp.png "$MUNINROUTE"/rtom_"$1"_"$PICS".png; done
 
-	chown munin:munin "$MUNINROUTE"/rtom_"$1"_* && chmod 644 "$MUNINROUTE"/rtom_"$1"_*
+	"$CMDCHOWN" munin:munin "$MUNINROUTE"/rtom_"$1"_* && "$CMDCHMOD" 644 "$MUNINROUTE"/rtom_"$1"_*
 
-	ln -s "$MUNINROUTE"/rtom_"$1"_mem-day.png "$GRAPH"/img/rtom_"$1"_mem-day.png
-	ln -s "$MUNINROUTE"/rtom_"$1"_mem-week.png "$GRAPH"/img/rtom_"$1"_mem-week.png
-	ln -s "$MUNINROUTE"/rtom_"$1"_mem-month.png "$GRAPH"/img/rtom_"$1"_mem-month.png
+	"$CMDLN" -s "$MUNINROUTE"/rtom_"$1"_mem-day.png "$GRAPH"/img/rtom_"$1"_mem-day.png
+	"$CMDLN" -s "$MUNINROUTE"/rtom_"$1"_mem-week.png "$GRAPH"/img/rtom_"$1"_mem-week.png
+	"$CMDLN" -s "$MUNINROUTE"/rtom_"$1"_mem-month.png "$GRAPH"/img/rtom_"$1"_mem-month.png
 
-	ln -s "$MUNINROUTE"/rtom_"$1"_peers-day.png "$GRAPH"/img/rtom_"$1"_peers-day.png
-	ln -s "$MUNINROUTE"/rtom_"$1"_peers-week.png "$GRAPH"/img/rtom_"$1"_peers-week.png
-	ln -s "$MUNINROUTE"/rtom_"$1"_peers-month.png "$GRAPH"/img/rtom_"$1"_peers-month.png
+	"$CMDLN" -s "$MUNINROUTE"/rtom_"$1"_peers-day.png "$GRAPH"/img/rtom_"$1"_peers-day.png
+	"$CMDLN" -s "$MUNINROUTE"/rtom_"$1"_peers-week.png "$GRAPH"/img/rtom_"$1"_peers-week.png
+	"$CMDLN" -s "$MUNINROUTE"/rtom_"$1"_peers-month.png "$GRAPH"/img/rtom_"$1"_peers-month.png
 
-	ln -s "$MUNINROUTE"/rtom_"$1"_spdd-day.png "$GRAPH"/img/rtom_"$1"_spdd-day.png
-	ln -s "$MUNINROUTE"/rtom_"$1"_spdd-week.png "$GRAPH"/img/rtom_"$1"_spdd-week.png
-	ln -s "$MUNINROUTE"/rtom_"$1"_spdd-month.png "$GRAPH"/img/rtom_"$1"_spdd-month.png
+	"$CMDLN" -s "$MUNINROUTE"/rtom_"$1"_spdd-day.png "$GRAPH"/img/rtom_"$1"_spdd-day.png
+	"$CMDLN" -s "$MUNINROUTE"/rtom_"$1"_spdd-week.png "$GRAPH"/img/rtom_"$1"_spdd-week.png
+	"$CMDLN" -s "$MUNINROUTE"/rtom_"$1"_spdd-month.png "$GRAPH"/img/rtom_"$1"_spdd-month.png
 
-	ln -s "$MUNINROUTE"/rtom_"$1"_vol-day.png "$GRAPH"/img/rtom_"$1"_vol-day.png
-	ln -s "$MUNINROUTE"/rtom_"$1"_vol-week.png "$GRAPH"/img/rtom_"$1"_vol-week.png
-	ln -s "$MUNINROUTE"/rtom_"$1"_vol-month.png "$GRAPH"/img/rtom_"$1"_vol-month.png
+	"$CMDLN" -s "$MUNINROUTE"/rtom_"$1"_vol-day.png "$GRAPH"/img/rtom_"$1"_vol-day.png
+	"$CMDLN" -s "$MUNINROUTE"/rtom_"$1"_vol-week.png "$GRAPH"/img/rtom_"$1"_vol-week.png
+	"$CMDLN" -s "$MUNINROUTE"/rtom_"$1"_vol-month.png "$GRAPH"/img/rtom_"$1"_vol-month.png
 
-	cp -f "$GRAPH"/user.php "$GRAPH"/"$1".php
+	"$CMDCP" -f "$GRAPH"/user.php "$GRAPH"/"$1".php
 
-	sed -i "s/@USER@/$1/g;" "$GRAPH"/"$1".php
-	sed -i "s/@RTOM@/rtom_$1/g;" "$GRAPH"/"$1".php
+	"$CMDSED" -i "s/@USER@/$1/g;" "$GRAPH"/"$1".php
+	"$CMDSED" -i "s/@RTOM@/rtom_$1/g;" "$GRAPH"/"$1".php
 
-	chown -R "$WDATA" "$GRAPH"
+	"$CMDCHOWN" -R "$WDATA" "$GRAPH"
 }
 
 FONCHTPASSWD () {
-	htpasswd -bs "$NGINXPASS"/rutorrent_passwd "$1" "${PASSNGINX}"
-	htpasswd -cbs "$NGINXPASS"/rutorrent_passwd_"$1" "$1" "${PASSNGINX}"
-	chmod 640 "$NGINXPASS"/*
-	chown -c "$WDATA" "$NGINXPASS"/*
+	"$CMDHTPASSWD" -bs "$NGINXPASS"/rutorrent_passwd "$1" "${PASSNGINX}"
+	"$CMDHTPASSWD" -cbs "$NGINXPASS"/rutorrent_passwd_"$1" "$1" "${PASSNGINX}"
+	"$CMDCHMOD" 640 "$NGINXPASS"/*
+	"$CMDCHOWN" -c "$WDATA" "$NGINXPASS"/*
 }
 
 FONCRTCONF () {
-	cat <<- EOF >> "$NGINXENABLE"/rutorrent.conf
+	"$CMDCAT" <<- EOF >> "$NGINXENABLE"/rutorrent.conf
 
 		        location /$1 {
 		                include scgi_params;
@@ -221,14 +224,14 @@ FONCRTCONF () {
 	EOF
 
 	if [ -f "$NGINXCONFD"/log_rutorrent.conf ]; then
-		sed -i "2i\  /$USERMAJ 0;" "$NGINXCONFD"/log_rutorrent.conf
+		"$CMDSED" -i "2i\  /$USERMAJ 0;" "$NGINXCONFD"/log_rutorrent.conf
 	fi
 }
 
 FONCPHPCONF () {
-	touch "$RUCONFUSER"/"$1"/config.php
+	"$CMDTOUCH" "$RUCONFUSER"/"$1"/config.php
 
-	cat <<- EOF > "$RUCONFUSER"/"$1"/config.php
+	"$CMDCAT" <<- EOF > "$RUCONFUSER"/"$1"/config.php
 		<?php
 		\$pathToExternals = array(
 		    "curl"  => '/usr/bin/curl',
@@ -243,58 +246,58 @@ FONCPHPCONF () {
 		\$XMLRPCMountPoint = '/$3';
 	EOF
 
-	sed -i "s/@PHPNAME@/$PHPNAME/g;" "$RUCONFUSER"/"$1"/config.php
+	"$CMDSED" -i "s/@PHPNAME@/$PHPNAME/g;" "$RUCONFUSER"/"$1"/config.php
 }
 
 FONCTORRENTRC () {
-	cp -f "$FILES"/rutorrent/rtorrent.rc /home/"$1"/.rtorrent.rc
-	sed -i "s/@USER@/$1/g;" /home/"$1"/.rtorrent.rc
-	sed -i "s/@PORT@/$2/g;" /home/"$1"/.rtorrent.rc
-	sed -i "s|@RUTORRENT@|$3|;" /home/"$1"/.rtorrent.rc
+	"$CMDCP" -f "$FILES"/rutorrent/rtorrent.rc /home/"$1"/.rtorrent.rc
+	"$CMDSED" -i "s/@USER@/$1/g;" /home/"$1"/.rtorrent.rc
+	"$CMDSED" -i "s/@PORT@/$2/g;" /home/"$1"/.rtorrent.rc
+	"$CMDSED" -i "s|@RUTORRENT@|$3|;" /home/"$1"/.rtorrent.rc
 }
 
 FONCSCRIPTRT () {
-	cp -f "$FILES"/rutorrent/init.conf /etc/init.d/"$1"-rtorrent
-	sed -i "s/@USER@/$1/g;" /etc/init.d/"$1"-rtorrent
-	chmod +x /etc/init.d/"$1"-rtorrent
-	update-rc.d "$1"-rtorrent defaults
+	"$CMDCP" -f "$FILES"/rutorrent/init.conf /etc/init.d/"$1"-rtorrent
+	"$CMDSED" -i "s/@USER@/$1/g;" /etc/init.d/"$1"-rtorrent
+	"$CMDCHMOD" +x /etc/init.d/"$1"-rtorrent
+	"$CMDUPDATERC" "$1"-rtorrent defaults
 }
 
 FONCIRSSI () {
 	IRSSIPORT=1"$2"
-	mkdir -p /home/"$1"/.irssi/scripts/autorun
+	"$CMDMKDIR" -p /home/"$1"/.irssi/scripts/autorun
 	cd /home/"$1"/.irssi/scripts || exit
-	curl -sL http://git.io/vlcND | grep -Po '(?<="browser_download_url": ")(.*-v[\d.]+.zip)' | xargs wget --quiet -O autodl-irssi.zip
-	unzip -o autodl-irssi.zip
-	command rm autodl-irssi.zip
-	cp -f /home/"$1"/.irssi/scripts/autodl-irssi.pl /home/"$1"/.irssi/scripts/autorun
-	mkdir -p /home/"$1"/.autodl
+	"$CMDCURL" -sL http://git.io/vlcND | "$CMDGREP" -Po '(?<="browser_download_url": ")(.*-v[\d.]+.zip)' | xargs "$CMDWGET" --quiet -O autodl-irssi.zip
+	"$CMDUNZIP" -o autodl-irssi.zip
+	command "$CMDRM" autodl-irssi.zip
+	"$CMDCP" -f /home/"$1"/.irssi/scripts/autodl-irssi.pl /home/"$1"/.irssi/scripts/autorun
+	"$CMDMKDIR" -p /home/"$1"/.autodl
 
-	cat <<- EOF > /home/"$1"/.autodl/autodl.cfg
+	"$CMDCAT" <<- EOF > /home/"$1"/.autodl/autodl.cfg
 		[options]
 		gui-server-port = $IRSSIPORT
 		gui-server-password = $3
 	EOF
 
-	mkdir -p  "$RUCONFUSER"/"$1"/plugins/autodl-irssi
+	"$CMDMKDIR" -p  "$RUCONFUSER"/"$1"/plugins/autodl-irssi
 
-	cat <<- EOF > "$RUCONFUSER"/"$1"/plugins/autodl-irssi/conf.php
+	"$CMDCAT" <<- EOF > "$RUCONFUSER"/"$1"/plugins/autodl-irssi/conf.php
 		<?php
 		\$autodlPort = $IRSSIPORT;
 		\$autodlPassword = "$3";
 		?>
 	EOF
 
-	cp -f "$FILES"/rutorrent/irssi.conf /etc/init.d/"$1"-irssi
-	sed -i "s/@USER@/$1/g;" /etc/init.d/"$1"-irssi
-	chmod +x /etc/init.d/"$1"-irssi
-	update-rc.d "$1"-irssi defaults
+	"$CMDCP" -f "$FILES"/rutorrent/irssi.conf /etc/init.d/"$1"-irssi
+	"$CMDSED" -i "s/@USER@/$1/g;" /etc/init.d/"$1"-irssi
+	"$CMDCHMOD" +x /etc/init.d/"$1"-irssi
+	"$CMDUPDATERC" "$1"-irssi defaults
 }
 
 FONCBAKSESSION () {
-	sed -i '$d' "$SCRIPT"/backup-session.sh
+	"$CMDSED" -i '$d' "$SCRIPT"/backup-session.sh
 
-	cat <<- EOF >> "$SCRIPT"/backup-session.sh
+	"$CMDCAT" <<- EOF >> "$SCRIPT"/backup-session.sh
 		FONCBACKUP $USER
 		exit 0
 	EOF
@@ -302,11 +305,11 @@ FONCBAKSESSION () {
 
 FONCGEN () {
 	if [[ -f "$RAPPORT" ]]; then
-		rm "$RAPPORT"
+		"$CMDRM" "$RAPPORT"
 	fi
-	touch "$RAPPORT"
+	"$CMDTOUCH" "$RAPPORT"
 
-	cat <<-EOF >> "$RAPPORT"
+	"$CMDCAT" <<-EOF >> "$RAPPORT"
 
 		### Report generated on $DATE ###
 
@@ -323,36 +326,36 @@ FONCGEN () {
 
 FONCCHECKBIN () {
 	if hash "$1" 2>/dev/null; then
-		echo
+		"$CMDECHO"
 	else
-		apt-get -y install "$1"
-		echo ""
+		"$CMDAPTGET" -y install "$1"
+		"$CMDECHO" ""
 	fi
 }
 
 FONCGENRAPPORT () {
-	LINK=$(/usr/bin/pastebinit -b "$PASTEBIN" "$RAPPORT")
-	echo -e "${CBLUE}Report link:${CEND} ${CYELLOW}$LINK${CEND}"
-	echo -e "${CBLUE}Report backup:${CEND} ${CYELLOW}$RAPPORT${CEND}"
+	LINK=$("$CMDPASTEBINIT" -b "$PASTEBIN" "$RAPPORT" 2>/dev/null)
+	"$CMDECHO" -e "${CBLUE}Report link:${CEND} ${CYELLOW}$LINK${CEND}"
+	"$CMDECHO" -e "${CBLUE}Report backup:${CEND} ${CYELLOW}$RAPPORT${CEND}"
 }
 
 FONCRAPPORT () {
 	# $1 = Fichier
 	if ! [[ -z "$1" ]]; then
 		if [[ -f "$1" ]]; then
-			if [[ $(wc -l < "$1") == 0 ]]; then
+			if [[ $("$CMDWC" -l < "$1") == 0 ]]; then
 				FILE="--> Empty file"
 			else
-				FILE=$(cat "$1")
+				FILE=$("$CMDCAT" "$1")
 				# domain.tld
 				if [[ "$1" = /etc/nginx/sites-enabled/* ]]; then
-					SERVER_NAME=$(grep server_name < "$1" | cut -d';' -f1 | sed 's/ //' | cut -c13-)
-					LETSENCRYPT=$(grep letsencrypt < "$1" | head -1 | cut -f 5 -d '/')
+					SERVER_NAME=$("$CMDGREP" server_name < "$1" | "$CMDCUT" -d';' -f1 | "$CMDSED" 's/ //' | "$CMDCUT" -c13-)
+					LETSENCRYPT=$("$CMDGREP" letsencrypt < "$1" | "$CMDHEAD" -1 | "$CMDCUT" -f 5 -d '/')
 					if ! [[ "$SERVER_NAME" = _ ]]; then
 						if [ -z "$LETSENCRYPT" ]; then
-							FILE=$(sed "s/server_name[[:blank:]]${SERVER_NAME};/server_name domain.tld;/g;" "$1")
+							FILE=$("$CMDSED" "s/server_name[[:blank:]]${SERVER_NAME};/server_name domain.tld;/g;" "$1")
 						else
-							FILE=$(sed "s/server_name[[:blank:]]${SERVER_NAME};/server_name domain.tld;/g; s/$LETSENCRYPT/domain.tld/g;" "$1")
+							FILE=$("$CMDSED" "s/server_name[[:blank:]]${SERVER_NAME};/server_name domain.tld;/g; s/$LETSENCRYPT/domain.tld/g;" "$1")
 						fi
 					fi
 				fi
@@ -373,7 +376,7 @@ FONCRAPPORT () {
 
 	# $3 = Affichage header
 	if [[ $3 == 1 ]]; then
-		cat <<-EOF >> "$RAPPORT"
+		"$CMDCAT" <<-EOF >> "$RAPPORT"
 
 			.......................................................................................................................................
 			## $NAME
@@ -389,11 +392,12 @@ FONCRAPPORT () {
 }
 
 FONCTESTRTORRENT () {
-	SCGI="$(sed -n '/^network.scgi.open_port/p' /home/"$USERNAME"/.rtorrent.rc | cut -b 36-)"
-	PORT_LISTENING=$(netstat -aultnp | awk '{print $4}' | grep -E ":$SCGI\$" -c)
-	RTORRENT_LISTENING=$(netstat -aultnp | sed -n '/'$SCGI'/p' | grep rtorrent -c)
 
-	cat <<-EOF >> "$RAPPORT"
+	SCGI="$("$CMDSED" -n '/^network.scgi.open_port/p' /home/"$USERNAME"/.rtorrent.rc | "$CMDCUT" -b 36-)"
+	PORT_LISTENING=$("$CMDNETSTAT" -aultnp | "$CMDAWK" '{print $4}' | "$CMDGREP" -E ":$SCGI\$" -c)
+	RTORRENT_LISTENING=$("$CMDNETSTAT" -aultnp | "$CMDSED" -n '/'$SCGI'/p' | "$CMDGREP" rtorrent -c)
+
+	"$CMDCAT" <<-EOF >> "$RAPPORT"
 
 		.......................................................................................................................................
 		## Check rTorrent & sgci
@@ -402,56 +406,56 @@ FONCTESTRTORRENT () {
 	EOF
 
 	# rTorrent lancé
-	if [[ "$(ps uU "$USERNAME" | grep -e 'rtorrent' -c)" == [0-1] ]]; then
-		echo -e "rTorrent down" >> "$RAPPORT"
+	if [[ "$("$CMDPS" uU "$USERNAME" | "$CMDGREP" -e 'rtorrent' -c)" == [0-1] ]]; then
+		"$CMDECHO" -e "rTorrent down" >> "$RAPPORT"
 	else
-		echo -e "rTorrent Up" >> "$RAPPORT"
+		"$CMDECHO" -e "rTorrent Up" >> "$RAPPORT"
 	fi
 
 	# socket
 	if (( PORT_LISTENING >= 1 )); then
-		echo -e "A socket listens on the port $SCGI" >> "$RAPPORT"
+		"$CMDECHO" -e "A socket listens on the port $SCGI" >> "$RAPPORT"
 		if (( RTORRENT_LISTENING >= 1 )); then
-			echo -e "It is well rTorrent that listens on the port $SCGI" >> "$RAPPORT"
+			"$CMDECHO" -e "It is well rTorrent that listens on the port $SCGI" >> "$RAPPORT"
 		else
-			echo -e "It's not rTorrent listening on the port $SCGI" >> "$RAPPORT"
+			"$CMDECHO" -e "It's not rTorrent listening on the port $SCGI" >> "$RAPPORT"
 		fi
 	else
-		echo -e "No program listening on the port $SCGI" >> "$RAPPORT"
+		"$CMDECHO" -e "No program listening on the port $SCGI" >> "$RAPPORT"
 	fi
 
 	# ruTorrent
 	if [[ -f "$RUTORRENT"/conf/users/"$USERNAME"/config.php ]]; then
-		if [[ $(cat "$RUTORRENT"/conf/users/"$USERNAME"/config.php) =~ "\$scgi_port = $SCGI" ]]; then
-			echo -e "Good SCGI port specified in the config.php file" >> "$RAPPORT"
+		if [[ $("$CMDCAT" "$RUTORRENT"/conf/users/"$USERNAME"/config.php) =~ "\$scgi_port = $SCGI" ]]; then
+			"$CMDECHO" -e "Good SCGI port specified in the config.php file" >> "$RAPPORT"
 		else
-			echo -e "Wrong SCGI port specified in config.php" >> "$RAPPORT"
+			"$CMDECHO" -e "Wrong SCGI port specified in config.php" >> "$RAPPORT"
 		fi
 	else
-		echo -e "User directory found but config.php file does not exist" >> "$RAPPORT"
+		"$CMDECHO" -e "User directory found but config.php file does not exist" >> "$RAPPORT"
 	fi
 
 	# nginx
-	if [[ $(cat "$NGINXENABLE"/rutorrent.conf) =~ $SCGI ]]; then
-		echo -e "The ports nginx and the one indicated match" >> "$RAPPORT"
+	if [[ $("$CMDCAT" "$NGINXENABLE"/rutorrent.conf) =~ $SCGI ]]; then
+		"$CMDECHO" -e "The ports nginx and the one indicated match" >> "$RAPPORT"
 	else
-		echo -e "The nginx ports and the specified ports do not match" >> "$RAPPORT"
+		"$CMDECHO" -e "The nginx ports and the specified ports do not match" >> "$RAPPORT"
 	fi
 }
 
 FONCARG () {
-	USER=$(grep -m 1 : < "$ARGFILE" | cut -f 1 -d ':')
-	USERPWD=$(grep -m 1 : < "$ARGFILE" | cut -d ':' -f2-)
-	sed -i '1d' "$ARGFILE"
+	USER=$("$CMDGREP" -m 1 : < "$ARGFILE" | "$CMDCUT" -f 1 -d ':')
+	USERPWD=$("$CMDGREP" -m 1 : < "$ARGFILE" | "$CMDCUT" -d ':' -f2-)
+	"$CMDSED" -i '1d' "$ARGFILE"
 }
 
-FONCMEDIAINFO () {
-	cd /tmp || exit
-	wget http://mediaarea.net/download/binary/libzen0/"$LIBZEN0"/"$LIBZEN0NAME"_"$LIBZEN0"-1_amd64."$DEBNUMBER"
-	wget http://mediaarea.net/download/binary/libmediainfo0/"$LIBMEDIAINFO0"/"$LIBMEDIAINFO0NAME"_"$LIBMEDIAINFO0"-1_amd64."$DEBNUMBER"
-	wget http://mediaarea.net/download/binary/mediainfo/"$MEDIAINFO"/mediainfo_"$MEDIAINFO"-1_amd64."$DEBNUMBER"
-
-	dpkg -i "$LIBZEN0NAME"_"$LIBZEN0"-1_amd64."$DEBNUMBER"
-	dpkg -i "$LIBMEDIAINFO0NAME"_"$LIBMEDIAINFO0"-1_amd64."$DEBNUMBER"
-	dpkg -i mediainfo_"$MEDIAINFO"-1_amd64."$DEBNUMBER"
-}
+#FONCMEDIAINFO () {
+#	cd /tmp || exit
+#	"$CMDWGET" http://mediaarea.net/download/binary/libzen0/"$LIBZEN0"/"$LIBZEN0NAME"_"$LIBZEN0"-1_amd64."$DEBNUMBER"
+#	"$CMDWGET" http://mediaarea.net/download/binary/libmediainfo0/"$LIBMEDIAINFO0"/"$LIBMEDIAINFO0NAME"_"$LIBMEDIAINFO0"-1_amd64."$DEBNUMBER"
+#	"$CMDWGET" http://mediaarea.net/download/binary/mediainfo/"$MEDIAINFO"/mediainfo_"$MEDIAINFO"-1_amd64."$DEBNUMBER"
+#
+#	"$CMDDPKG" -i "$LIBZEN0NAME"_"$LIBZEN0"-1_amd64."$DEBNUMBER"
+#	"$CMDDPKG" -i "$LIBMEDIAINFO0NAME"_"$LIBMEDIAINFO0"-1_amd64."$DEBNUMBER"
+#	"$CMDDPKG" -i mediainfo_"$MEDIAINFO"-1_amd64."$DEBNUMBER"
+#}

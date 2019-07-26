@@ -10,44 +10,38 @@ CBLUE="${CSI}1;34m"
 CMAG="${CSI}1;35m"
 
 ARG="$*"
-VERSION=$(cat /etc/debian_version)
+VERSION=$("$CMDCAT" /etc/debian_version)
 
-if [[ "$VERSION" = 7.* ]]; then
-	DEBNUMBER="Debian_7.0.deb"
-	DEBNAME="wheezy"
-	PHPPATH="/etc/php5"
-	PHPNAME="php5"
-	PHPSOCK="/var/run/php5-fpm.sock"
-	LIBZEN0NAME="libzen0"
-	LIBMEDIAINFO0NAME="libmediainfo0"
-
-elif [[ "$VERSION" = 8.* ]]; then
-	DEBNUMBER="Debian_8.0.deb"
-	DEBNAME="jessie"
-	PHPPATH="/etc/php5"
-	PHPNAME="php5"
-	PHPSOCK="/var/run/php5-fpm.sock"
-	LIBZEN0NAME="libzen0"
-	LIBMEDIAINFO0NAME="libmediainfo0"
-
-elif [[ "$VERSION" = 9.* ]]; then
+if [[ "$VERSION" = 9.* ]]; then
 	DEBNUMBER="Debian_9.0.deb"
 	DEBNAME="stretch"
-	PHPPATH="/etc/php/7.1"
-	PHPNAME="php7.1"
-	PHPSOCK="/run/php/php7.1-fpm.sock"
-	LIBZEN0NAME="libzen0v5"
-	LIBMEDIAINFO0NAME="libmediainfo0v5"
+
+elif [[ "$VERSION" = 10.* ]]; then
+	DEBNUMBER="Debian_10.0.deb"
+	DEBNAME="buster"
 
 fi
 
-LIBTORRENT="v0.13.7"
-RTORRENT="v0.9.7"
+HISTOLOG="histo"
+# juste pour être raccord avec celui au dessus que j'utilise ^^
+MEDUSALOG="histo"
+SICKRAGELOG="histo"
+COUCHPOTATOLOG="histo"
+
+PHPNAME="php7.3"
+PHPPATH="/etc/php/7.3"
+PHPSOCK="/run/php/php7.3-fpm.sock"
+#LIBZEN0NAME="libzen0v5"
+#LIBMEDIAINFO0NAME="libmediainfo0v5"
+
+LIBTORRENT="v0.13.8"
+RTORRENT="v0.9.8"
+
 SBMVERSION="3.0.1"
 
-LIBZEN0="0.4.37"
-LIBMEDIAINFO0="18.08.1"
-MEDIAINFO="18.08.1"
+#LIBZEN0="0.4.37"
+#LIBMEDIAINFO0="19.04"
+#MEDIAINFO="19.04"
 
 RUTORRENT="/var/www/rutorrent"
 RUPLUGINS="/var/www/rutorrent/plugins"
@@ -70,10 +64,10 @@ NGINXCONFD="/etc/nginx/conf.d"
 NGINXCONFDRAT="/etc/nginx/ratxabox.d"
 SOURCES="/etc/apt/sources.list.d"
 ARGFILE="/tmp/arg.tmp"
-ARGSBM=$(echo "$ARG" | tr -s ' ' '\n' | grep -m 1 sbm)
-ARGMAIL=$(echo "$ARG" | tr -s ' ' '\n' | grep -m 1 @)
-ARGFTP=$(echo "$ARG" | tr -s ' ' '\n' | grep -m 1 ftp)
-ARGREBOOT=$(echo "$ARG" | tr -s ' ' '\n' | grep -m 1 reboot)
+ARGSBM=$("$CMDECHO" "$ARG" | "$CMDTR" -s ' ' '\n' | "$CMDGREP" -m 1 sbm)
+ARGMAIL=$("$CMDECHO" "$ARG" | "$CMDTR" -s ' ' '\n' | "$CMDGREP" -m 1 @)
+ARGFTP=$("$CMDECHO" "$ARG" | "$CMDTR" -s ' ' '\n' | "$CMDGREP" -m 1 ftp)
+ARGREBOOT=$("$CMDECHO" "$ARG" | "$CMDTR" -s ' ' '\n' | "$CMDGREP" -m 1 reboot)
 WDATA="www-data:www-data"
 SICKRAGE="/opt/sickrage"
 COUCHPOTATO="/opt/couchpotato"
@@ -81,11 +75,11 @@ MEDUSA="/opt/medusa"
 REBOOT="/var/www/reboot"
 
 RAPPORT="/tmp/rapport.txt"
-NOYAU=$(uname -r)
-DATE=$(date +"%d-%m-%Y à %H:%M")
-NGINX_VERSION=$(2>&1 nginx -v | grep -Eo "[0-9.+]{1,}")
-RUTORRENT_VERSION=$(grep version: < /var/www/rutorrent/js/webui.js | grep -E -o "[0-9]\.[0-9]{1,}")
-RTORRENT_VERSION=$(rtorrent -h | grep -E -o "[0-9]\.[0-9].[0-9]{1,}")
-PHP_VERSION=$(php -v | cut -c 1-7 | grep PHP | cut -c 5-7)
-CPU=$(sed '/^$/d' < /proc/cpuinfo | grep -m 1 'model name' | cut -c14-)
+NOYAU=$("$CMDUNAME" -r)
+DATE=$("$CMDDATE" +"%d-%m-%Y à %H:%M")
+NGINX_VERSION=$(2>&1 "$CMDNGINX" -v | "$CMDGREP" -Eo "[0-9.+]{1,}")
+RUTORRENT_VERSION=$("$CMDGREP" version: < /var/www/rutorrent/js/webui.js | "$CMDGREP" -E -o "[0-9]\.[0-9]{1,}")
+RTORRENT_VERSION=$("$CMDRTORRENT" -h | "$CMDGREP" -E -o "[0-9]\.[0-9].[0-9]{1,}")
+PHP_VERSION=$("$CMDPHP" -v | cut -c 1-7 | "$CMDGREP" PHP | "$CMDCUT" -c 5-7)
+CPU=$("$CMDSED" '/^$/d' < /proc/cpuinfo | "$CMDGREP" -m 1 'model name' | "$CMDCUT" -c14-)
 PASTEBIN="paste.ubuntu.com"

@@ -3,7 +3,7 @@
 # Script d'installation ruTorrent / Nginx
 # Auteur : Ex_Rat
 #
-# Nécessite Debian 7/8/9 - 64 bits & un serveur fraîchement installé
+# Nécessite Debian 9/10 - 64 bits & un serveur fraîchement installé
 #
 # Multi-utilisateurs
 # Inclus VsFTPd (ftp & ftps sur le port 21), Fail2ban (avec conf nginx, ftp & ssh)
@@ -35,6 +35,8 @@
 # includes
 INCLUDES="includes"
 # shellcheck source=/dev/null
+. "$INCLUDES"/cmd.sh
+# shellcheck source=/dev/null
 . "$INCLUDES"/variables.sh
 # shellcheck source=/dev/null
 . "$INCLUDES"/langues.sh
@@ -47,12 +49,16 @@ FONCBASHRC
 
 # contrôle installation
 if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
+	# contröle wget
+	if [ ! -f "$CMDWGET" ]; then
+		"$CMDAPTGET" install -y wget &>/dev/null
+	fi
 	# log de l'installation
-	exec > >(tee "/tmp/install.log") 2>&1
+	exec > >("$CMDTEE" "/tmp/install.log") 2>&1
 	# liste users en arguments
-	TESTARG=$(echo "$ARG" | tr -s ' ' '\n' | grep :)
+	TESTARG=$("$CMDECHO" "$ARG" | "$CMDTR" -s ' ' '\n' | "$CMDGREP" :)
 	if [ ! -z "$TESTARG" ]; then
-		echo "$ARG" | tr -s ' ' '\n' | grep : > "$ARGFILE"
+		"$CMDECHO" "$ARG" | "$CMDTR" -s ' ' '\n' | "$CMDGREP" : > "$ARGFILE"
 	fi
 
 	####################################
@@ -60,16 +66,16 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	####################################
 
 	# message d'accueil
-	clear
-	echo ""; set "102"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"; echo ""
+	"$CMDCLEAR"
+	"$CMDECHO" ""; set "102"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}"; "$CMDECHO" ""
 	# shellcheck source=/dev/null
 	. "$INCLUDES"/logo.sh
 
 	if [ ! -s "$ARGFILE" ]; then
-		echo ""; set "104"; FONCTXT "$1"; echo -e "${CYELLOW}$TXT1${CEND}"
-		set "106"; FONCTXT "$1"; echo -e "${CYELLOW}$TXT1${CEND}"; echo ""
+		"$CMDECHO" ""; set "104"; FONCTXT "$1"; "$CMDECHO" -e "${CYELLOW}$TXT1${CEND}"
+		set "106"; FONCTXT "$1"; "$CMDECHO" -e "${CYELLOW}$TXT1${CEND}"; "$CMDECHO" ""
 		FONCUSER # demande nom user
-		echo ""
+		"$CMDECHO" ""
 		FONCPASS # demande mot de passe
 	else
 		FONCARG
@@ -80,7 +86,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	# email admin seedbox-manager
 	if [ -z "$ARGMAIL" ]; then
 		while :; do
-			echo ""; set "124"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1 ${CEND}"
+			"$CMDECHO" ""; set "124"; FONCTXT "$1"; "$CMDECHO" -e "${CGREEN}$TXT1 ${CEND}"
 			read -r INSTALLMAIL
 			if [ "$INSTALLMAIL" = "" ]; then
 				EMAIL=contact@exemple.com
@@ -90,7 +96,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 					EMAIL="$INSTALLMAIL"
 					break
 				else
-					echo ""; set "126"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"
+					"$CMDECHO" ""; set "126"; FONCTXT "$1"; "$CMDECHO" -e "${CRED}$TXT1${CEND}"
 				fi
 			fi
 		done
@@ -100,7 +106,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 	# installation vsftpd
 	if [ -z "$ARGFTP" ]; then
-		echo ""; set "128"; FONCTXT "$1"; echo -n -e "${CGREEN}$TXT1 ${CEND}"
+		"$CMDECHO" ""; set "128"; FONCTXT "$1"; "$CMDECHO" -n -e "${CGREEN}$TXT1 ${CEND}"
 		read -r SERVFTP
 	else
 		if [ "$ARGFTP" = "ftp-off" ]; then
@@ -111,12 +117,12 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	fi
 
 	# récupération 5% root sur /home ou /home/user si présent
-	FSHOME=$(df -h | grep /home | cut -c 6-9)
+	FSHOME=$("$CMDDF" -h | "$CMDGREP" /home | "$CMDCUT" -c 6-9)
 	if [ "$FSHOME" = "" ]; then
-		echo
+		"$CMDECHO"
 	else
-		tune2fs -m 0 /dev/"$FSHOME" &> /dev/null
-		mount -o remount /home &> /dev/null
+		"$CMDTUNE2FS" -m 0 /dev/"$FSHOME" &> /dev/null
+		"$CMDMOUNT" -o remount /home &> /dev/null
 	fi
 
 	FONCFSUSER "$USER"
@@ -125,26 +131,22 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	PASSNGINX=${USERPWD}
 
 	# ajout utilisateur
-	useradd -M -s /bin/bash "$USER"
+	"$CMDUSERADD" -M -s /bin/bash "$USER"
 
 	# création mot de passe utilisateur
-	echo "${USER}:${USERPWD}" | chpasswd
+	"$CMDECHO" "${USER}:${USERPWD}" | "$CMDCHPASSWD"
 
 	# anti-bug /home/user déjà existant
-	mkdir -p /home/"$USER"
-	chown -R "$USER":"$USER" /home/"$USER"
+	"$CMDMKDIR" -p /home/"$USER"
+	"$CMDCHOWN" -R "$USER":"$USER" /home/"$USER"
 
 	# variable utilisateur majuscule
-	USERMAJ=$(echo "$USER" | tr "[:lower:]" "[:upper:]")
+	USERMAJ=$("$CMDECHO" "$USER" | "$CMDTR" "[:lower:]" "[:upper:]")
 
-	# récupération ip serveur
-	if [[ $(echo "$VERSION" "9" | awk '{print ($1 >= $2)}') == 1 ]]; then
-		apt-get install -y net-tools
-	fi
 	FONCIP
 
 	# récupération threads & sécu -j illimité
-	THREAD=$(grep -c processor < /proc/cpuinfo)
+	THREAD=$("$CMDGREP" -c processor < /proc/cpuinfo)
 	if [ "$THREAD" = "" ]; then
 		THREAD=1
 	fi
@@ -155,127 +157,127 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 	# bind9 & dhcp
 	if [ ! -d /etc/bind ]; then
-		rm /etc/init.d/bind9 &> /dev/null
-		apt-get install -y bind9
+		"$CMDRM" /etc/init.d/bind9 &> /dev/null
+		"$CMDAPTGET" install -y bind9
 	fi
 
 	if [ -f /etc/dhcp/dhclient.conf ]; then
-		sed -i "s/#prepend domain-name-servers 127.0.0.1;/prepend domain-name-servers 127.0.0.1;/g;" /etc/dhcp/dhclient.conf
+		"$CMDSED" -i "s/#prepend domain-name-servers 127.0.0.1;/prepend domain-name-servers 127.0.0.1;/g;" /etc/dhcp/dhclient.conf
 	fi
 
-	cp -f "$FILES"/bind/named.conf.options /etc/bind/named.conf.options
+	"$CMDCP" -f "$FILES"/bind/named.conf.options /etc/bind/named.conf.options
 
-	sed -i '/127.0.0.1/d' /etc/resolv.conf # pour éviter doublon
-	echo "nameserver 127.0.0.1" >> /etc/resolv.conf
+	"$CMDSED" -i '/127.0.0.1/d' /etc/resolv.conf # pour éviter doublon
+	"$CMDECHO" "nameserver 127.0.0.1" >> /etc/resolv.conf
 	FONCSERVICE restart bind9
 
 	# installation des paquets
 	apt-get update && apt-get upgrade -y
-	echo ""; set "132" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDECHO" ""; set "132" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
-	apt-get install -y \
-		htop \
-		openssl \
-		apt-utils \
-		python \
-		python-pip \
-		build-essential \
-		libssl-dev \
-		pkg-config \
-		automake \
-		libcppunit-dev \
-		libtool \
-		whois \
-		libcurl4-openssl-dev \
-		libsigc++-2.0-dev \
-		libncurses5-dev \
-		vim \
-		nano \
-		ccze \
-		screen \
-		subversion \
+	"$CMDAPTGET" install -y \
 		apache2-utils \
-		curl \
-		"$PHPNAME" \
-		"$PHPNAME"-cli \
-		"$PHPNAME"-fpm \
-		"$PHPNAME"-curl \
-		"$PHPNAME"-geoip \
-		unrar \
-		rar \
-		zip \
-		mktorrent \
-		fail2ban \
-		ntp \
-		ntpdate \
-		munin \
-		ffmpeg \
+		apt-utils \
 		aptitude \
+		automake \
+		build-essential \
+		ccze \
+		cpufrequtils \
+		curl \
 		dnsutils \
+		fail2ban \
+		ffmpeg \
+		gawk \
+		htop \
 		irssi \
 		libarchive-zip-perl \
+		libcppunit-dev \
+		libcurl4-openssl-dev \
 		libjson-perl \
 		libjson-xs-perl \
-		libxml-libxslt-perl \
-		libwww-perl \
-		nginx \
 		libmms0 \
-		pastebinit \
-		sox \
-		libsox-fmt-mp3 \
-		zlib1g-dev \
-		gawk \
+		libncurses5-dev \
 		libncursesw5-dev \
-		cpufrequtils \
-		psmisc
-		# reserve zap xlmrpc debian 8/9
-		# libxmlrpc-c++8-dev
+		libsigc++-2.0-dev \
+		libsox-fmt-all \
+		libsox-fmt-mp3 \
+		libtool \
+		libssl-dev \
+		libwww-perl \
+		libxml-libxslt-perl \
+		mediainfo \
+		mktorrent \
+		munin \
+		munin-node \
+		nano \
+		nginx \
+		ntp \
+		ntpdate \
+		openssl \
+		pastebinit \
+		"$PHPNAME" \
+		"$PHPNAME"-cli \
+		"$PHPNAME"-common \
+		"$PHPNAME"-curl \
+		"$PHPNAME"-fpm \
+		"$PHPNAME"-json \
+		"$PHPNAME"-mbstring \
+		"$PHPNAME"-opcache \
+		"$PHPNAME"-readline \
+		"$PHPNAME"-xml \
+		"$PHPNAME"-zip \
+		php-geoip \
+		pkg-config \
+		psmisc \
+		pv \
+		python \
+		python-pip \
+		rar \
+		screen \
+		sox \
+		subversion \
+		unrar \
+		unzip \
+		vim \
+		whois \
+		zip \
+		zlib1g-dev
 
-		if [[ "$VERSION" = 7.* ]]; then
-			apt-get install -y \
-				libtinyxml2-0.0.0 \
-				libglib2.0-0
-		elif [[ "$VERSION" = 8.* ]]; then
-			apt-get install -y \
-				libtinyxml2-2 \
-				libsox-fmt-all
-		elif [[ "$VERSION" = 9.* ]]; then
-			apt-get install -y \
-				libtinyxml2-4 \
-				"$PHPNAME"-xml \
-				"$PHPNAME"-mbstring \
-				zlib1g-dev \
-				unzip \
-				munin-node \
-				libsox-fmt-all
+		if [[ "$VERSION" = 9.* ]]; then
+			"$CMDAPTGET" install -y \
+				libtinyxml2-4
+
+		elif [[ "$VERSION" = 10.* ]]; then
+			"$CMDAPTGET" install -y \
+				libtinyxml2-6a
 		fi
 
-	echo ""; set "136" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDECHO" ""; set "136" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	#gouverneur
-	cpufreq-set -r -g performance
+	"$CMPUFREQSET" -r -g performance
 
 	if [ ! -f /etc/default/cpufrequtils ]; then
-		cp -f "$BONOBOX"/files/cpufreq/cpufrequtils /etc/default/cpufrequtils
+		"$CMDCP" -f "$BONOBOX"/files/cpufreq/cpufrequtils /etc/default/cpufrequtils
 	fi
 
 	# génération clé 2048 bits
-	openssl dhparam -out dhparams.pem 2048 >/dev/null 2>&1 &
+	"$CMDOPENSSL" dhparam -out dhparams.pem 2048 >/dev/null 2>&1 &
 
 	# téléchargement complément favicons
-	wget -T 10 -t 3 http://www.bonobox.net/script/favicon.tar.gz || wget -T 10 -t 3 http://alt.bonobox.net/favicon.tar.gz
-	tar xzfv favicon.tar.gz
+	"$CMDWGET" -T 10 -t 3 http://www.bonobox.net/script/favicon.tar.gz || "$CMDWGET" -T 10 -t 3 http://alt.bonobox.net/favicon.tar.gz
+	"$CMDTAR" xzfv favicon.tar.gz
 
 	#Compteur de telechargement pour la page http://ratxabox.ovh/
-	wget -T 10 -t 3 http://ratxabox.ovh/compteur.txt
+	"$CMDWGET" -T 10 -t 3 http://ratxabox.ovh/compteur.txt
 
 	# création fichiers couleurs nano
-	cp -f "$FILES"/nano/ini.nanorc /usr/share/nano/ini.nanorc
-	cp -f "$FILES"/nano/conf.nanorc /usr/share/nano/conf.nanorc
-	cp -f "$FILES"/nano/xorg.nanorc /usr/share/nano/xorg.nanorc
+	"$CMDCP" -f "$FILES"/nano/ini.nanorc /usr/share/nano/ini.nanorc
+	"$CMDCP" -f "$FILES"/nano/conf.nanorc /usr/share/nano/conf.nanorc
+	"$CMDCP" -f "$FILES"/nano/xorg.nanorc /usr/share/nano/xorg.nanorc
 
 	# configuration nano
-	cat <<- EOF >> /etc/nanorc
+	"$CMDCAT" <<- EOF >> /etc/nanorc
 
 		## Config Files (.ini)
 		include "/usr/share/nano/ini.nanorc"
@@ -287,19 +289,19 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		include "/usr/share/nano/xorg.nanorc"
 	EOF
 
-	echo ""; set "138" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDECHO" ""; set "138" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# configuration ntp & réglage heure fr
 	if [ "$GENLANG" = "fr" ]; then
-		echo "Europe/Paris" > /etc/timezone
-		cp -f /usr/share/zoneinfo/Europe/Paris /etc/localtime
+		"$CMDECHO" "Europe/Paris" > /etc/timezone
+		"$CMDCP" -f /usr/share/zoneinfo/Europe/Paris /etc/localtime
 
-		sed -i "s/server 0/#server 0/g;" /etc/ntp.conf
-		sed -i "s/server 1/#server 1/g;" /etc/ntp.conf
-		sed -i "s/server 2/#server 2/g;" /etc/ntp.conf
-		sed -i "s/server 3/#server 3/g;" /etc/ntp.conf
+		"$CMDSED" -i "s/server 0/#server 0/g;" /etc/ntp.conf
+		"$CMDSED" -i "s/server 1/#server 1/g;" /etc/ntp.conf
+		"$CMDSED" -i "s/server 2/#server 2/g;" /etc/ntp.conf
+		"$CMDSED" -i "s/server 3/#server 3/g;" /etc/ntp.conf
 
-		cat <<- EOF >> /etc/ntp.conf
+		"$CMDCAT" <<- EOF >> /etc/ntp.conf
 
 			server 0.fr.pool.ntp.org
 			server 1.fr.pool.ntp.org
@@ -307,111 +309,118 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			server 3.fr.pool.ntp.org
 		EOF
 
-		ntpdate -d 0.fr.pool.ntp.org
+		"$CMDNTPDATE" -d 0.fr.pool.ntp.org
 	fi
 
 	# installation xmlrpc libtorrent rtorrent
 	cd /tmp || exit
-	git clone https://github.com/mirror/xmlrpc-c.git
+	"$CMDGIT" clone --progress https://github.com/mirror/xmlrpc-c.git
+
 	cd xmlrpc-c/stable || exit
 	./configure #--disable-cplusplus
-	make -j "$THREAD"
-	make install
-	echo ""; set "140" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDMAKE" -j "$THREAD"
+	"$CMDMAKE" install
+	"$CMDECHO" ""; set "140" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# clone rtorrent et libtorrent
 	cd /tmp || exit
-	git clone https://github.com/rakshasa/libtorrent.git
-	git clone https://github.com/rakshasa/rtorrent.git
+	"$CMDGIT" clone --progress https://github.com/rakshasa/libtorrent.git
+	"$CMDGIT" clone --progress https://github.com/rakshasa/rtorrent.git
 
 	# compilation libtorrent
 	cd libtorrent || exit
-	git checkout "$LIBTORRENT"
-	git cherry-pick 7b29b6b
-
-	# if [[ $(echo "$VERSION" "9" | awk '{print ($1 >= $2)}') == 1 ]]; then
-		#cp -f "$FILES"/rutorrent/configure.ac /tmp/libtorrent/configure.ac
-		#cp -f "$FILES"/rutorrent/diffie_hellman.cc /tmp/libtorrent/src/utils/diffie_hellman.cc
-	# fi
-
+	"$CMDGIT" checkout "$LIBTORRENT"
 	./autogen.sh
 	./configure --disable-debug
-	make -j "$THREAD"
-	make install
-	echo ""; set "142" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1 $LIBTORRENT${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDMAKE" -j "$THREAD"
+	"$CMDMAKE" install
+	"$CMDECHO" ""; set "142" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1 $LIBTORRENT${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# compilation rtorrent
 	cd ../rtorrent || exit
-	git checkout "$RTORRENT"
+	"$CMDGIT" checkout "$RTORRENT"
 	./autogen.sh
 	./configure --with-xmlrpc-c --with-ncurses --disable-debug
-	make -j "$THREAD"
-	make install
-	ldconfig
-	echo ""; set "144" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1 $RTORRENT${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDMAKE" -j "$THREAD"
+	"$CMDMAKE" install
+	"$CMDLDCONFIG"
+	"$CMDECHO" ""; set "144" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1 $RTORRENT${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# création des dossiers
-	su "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session ~/.backup-session'
+	"$CMDSU" "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session ~/.backup-session'
 
 	# création dossier scripts perso
-	mkdir "$SCRIPT"
+	"$CMDMKDIR" "$SCRIPT"
 
 	# création accueil serveur
-	mkdir -p "$NGINXWEB"
-	cp -R "$BONOBOX"/base "$NGINXBASE"
+	"$CMDMKDIR" -p "$NGINXWEB"
+	"$CMDCP" -R "$BONOBOX"/base "$NGINXBASE"
 
 	# téléchargement et déplacement de rutorrent
-	git clone https://github.com/Novik/ruTorrent.git "$RUTORRENT"
-	echo ""; set "146" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDGIT" clone --progress https://github.com/Novik/ruTorrent.git "$RUTORRENT"
+	"$CMDECHO" ""; set "146" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
-	# installation des plugins
-	cd "$RUPLUGINS" || exit
+	# installation des plugins - thank Micdu70 ;)
+	cd /tmp || exit
+	"$CMDGIT" clone --progress https://github.com/exrat/rutorrent-plugins-pack
 
-	for PLUGINS in 'logoff' 'chat' 'lbll-suite' 'linklogs' 'nfo' 'titlebar' 'filemanager' 'fileshare' 'ratiocolor' 'pausewebui'; do
-		cp -R "$BONOBOX"/plugins/"$PLUGINS" "$RUPLUGINS"/
+	for PLUGINS in 'addzip' 'autodl-irssi' 'chat' 'filemanager' 'fileshare' 'geoip2' 'lbll-suite' 'logoff' 'nfo' 'pausewebui'  'ratiocolor' 'titlebar' 'trackerstatus'; do
+		"$CMDCP" -R /tmp/rutorrent-plugins-pack/"$PLUGINS" "$RUPLUGINS"/
 	done
 
-	# installation cfscrape pour _cloudflare
-	pip install cloudscraper
+	# installation cloudscraper pour _cloudflare
+	"$CMDPIP" install setuptools --upgrade
+	"$CMDPIP" install cloudscraper
 
-	# plugin seedbox-manager
-	git clone https://github.com/Hydrog3n/linkseedboxmanager.git
-	sed -i "2i\$host = \$_SERVER['HTTP_HOST'];\n" "$RUPLUGINS"/linkseedboxmanager/conf.php
-	sed -i "s/http:\/\/seedbox-manager.ndd.tld/\/\/'. \$host .'\/seedbox-manager\//g;" "$RUPLUGINS"/linkseedboxmanager/conf.php
+	# configuration geoip2
+	"$CMDWGET" https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz
+	"$CMDTAR" xzfv GeoLite2-City.tar.gz
+	cd /tmp/GeoLite2-City_* || exit
+	"$CMDMV" GeoLite2-City.mmdb "$RUPLUGINS"/geoip2/database/GeoLite2-City.mmdb
 
 	# configuration filemanager
-	cp -f "$FILES"/rutorrent/filemanager.conf "$RUPLUGINS"/filemanager/conf.php
+	"$CMDCP" -f "$FILES"/rutorrent/filemanager.conf "$RUPLUGINS"/filemanager/conf.php
+	"$CMDSED" -i "s|@RAR@|$CMDRAR|g;" "$RUPLUGINS"/filemanager/conf.php
+	"$CMDSED" -i "s|@ZIP@|$CMDZIP|g;" "$RUPLUGINS"/filemanager/conf.php
+	"$CMDSED" -i "s|@UNZIP@|$CMDUNZIP|g;" "$RUPLUGINS"/filemanager/conf.php
+	"$CMDSED" -i "s|@TAR@|$CMDTAR|g;" "$RUPLUGINS"/filemanager/conf.php
+	"$CMDSED" -i "s|@GZIP@|$CMDGZIP|g;" "$RUPLUGINS"/filemanager/conf.php
+	"$CMDSED" -i "s|@BZIP2@|$CMDBZIP2|g;" "$RUPLUGINS"/filemanager/conf.php
+
+	# configuration fileshare
+	"$CMDCP" -f "$FILES"/rutorrent/fileshare.conf "$RUPLUGINS"/fileshare/conf.php
+	"$CMDSED" -i "s/@IP@/$IP/g;" "$RUPLUGINS"/fileshare/conf.php
+	"$CMDCHOWN" -R "$WDATA" "$RUPLUGINS"/fileshare
+	"$CMDLN" -s "$RUPLUGINS"/fileshare/share.php "$NGINXBASE"/share.php
+
+	# plugin seedbox-manager
+	cd "$RUPLUGINS" || exit
+	"$CMDGIT" clone --progress https://github.com/Hydrog3n/linkseedboxmanager.git
+	"$CMDSED" -i "2i\$host = \$_SERVER['HTTP_HOST'];\n" "$RUPLUGINS"/linkseedboxmanager/conf.php
+	"$CMDSED" -i "s/http:\/\/seedbox-manager.ndd.tld/\/\/'. \$host .'\/seedbox-manager\//g;" "$RUPLUGINS"/linkseedboxmanager/conf.php
+
+	# plugin linklog
+	"$CMDGIT" clone --progress https://github.com/tomcdj71/LinkLogs.git linklogs
 
 	# configuration create
 	# shellcheck disable=SC2154
-	sed -i "s#$useExternal = false;#$useExternal = 'mktorrent';#" "$RUPLUGINS"/create/conf.php
+	"$CMDSED" -i "s#$useExternal = false;#$useExternal = 'mktorrent';#" "$RUPLUGINS"/create/conf.php
 	# shellcheck disable=SC2154
-	sed -i "s#$pathToCreatetorrent = '';#$pathToCreatetorrent = '/usr/bin/mktorrent';#" "$RUPLUGINS"/create/conf.php
-
-	# configuration fileshare
-	chown -R "$WDATA" "$RUPLUGINS"/fileshare
-	ln -s "$RUPLUGINS"/fileshare/share.php "$NGINXBASE"/share.php
-
-	# configuration share.php
-	cp -f "$FILES"/rutorrent/fileshare.conf "$RUPLUGINS"/fileshare/conf.php
-	sed -i "s/@IP@/$IP/g;" "$RUPLUGINS"/fileshare/conf.php
+	"$CMDSED" -i "s#$pathToCreatetorrent = '';#$pathToCreatetorrent = '/usr/bin/mktorrent';#" "$RUPLUGINS"/create/conf.php
 
 	# configuration logoff
-	sed -i "s/scars,user1,user2/$USER/g;" "$RUPLUGINS"/logoff/conf.php
+	"$CMDSED" -i "s/scars,user1,user2/$USER/g;" "$RUPLUGINS"/logoff/conf.php
 
 	# configuration autodl-irssi
-	git clone https://github.com/autodl-community/autodl-rutorrent.git autodl-irssi
-	cp -f autodl-irssi/_conf.php autodl-irssi/conf.php
-	cp -f autodl-irssi/css/oblivion.min.css autodl-irssi/css/spiritofbonobo.min.css
-	cp -f autodl-irssi/css/oblivion.min.css.map autodl-irssi/css/spiritofbonobo.min.css.map
-	touch autodl-irssi/css/materialdesign.min.css
+	cd "$RUPLUGINS" || exit
+	"$CMDCP" -f autodl-irssi/_conf.php autodl-irssi/conf.php
+	"$CMDCP" -f autodl-irssi/css/oblivion.min.css autodl-irssi/css/spiritofbonobo.min.css
+	"$CMDCP" -f autodl-irssi/css/oblivion.min.css.map autodl-irssi/css/spiritofbonobo.min.css.map
+	"$CMDTOUCH" autodl-irssi/css/materialdesign.min.css
 	FONCIRSSI "$USER" "$PORT" "$USERPWD"
 
 	# installation mediainfo
-	FONCMEDIAINFO
-
-	# script mise à jour mensuel geoip et complément plugin city
-	mkdir /usr/share/GeoIP
+	# FONCMEDIAINFO
 
 	# variable minutes aléatoire crontab geoip
 	MAXIMUM=58
@@ -422,106 +431,99 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 	for COPY in 'updateGeoIP.sh' 'backup-session.sh'
 	do
-		cp -f "$FILES"/scripts/"$COPY" "$SCRIPT"/"$COPY"
-		chmod a+x "$COPY"
+		"$CMDCP" -f "$FILES"/scripts/"$COPY" "$SCRIPT"/"$COPY"
+		"$CMDCHMOD" a+x "$COPY"
 	done
 
-	sh updateGeoIP.sh
 	FONCBAKSESSION
 
 	# copie favicons trackers
-	cp -f /tmp/favicon/*.png "$RUPLUGINS"/tracklabels/trackers/
+	"$CMDCP" -f /tmp/favicon/*.png "$RUPLUGINS"/tracklabels/trackers/
 
 	# ajout thèmes
-	rm -R "${RUPLUGINS:?}"/theme/themes/Blue
-	cp -R "$BONOBOX"/theme/ru/Blue "$RUPLUGINS"/theme/themes/Blue
-	cp -R "$BONOBOX"/theme/ru/SpiritOfBonobo "$RUPLUGINS"/theme/themes/SpiritOfBonobo
-	cp -R "$BONOBOX"/theme/ru/QuickBox-Dark "$RUPLUGINS"/theme/themes/QuickBox-Dark
-	git clone git://github.com/Phlooo/ruTorrent-MaterialDesign.git "$RUPLUGINS"/theme/themes/MaterialDesign
+	"$CMDRM" -R "${RUPLUGINS:?}"/theme/themes/Blue
+	"$CMDCP" -R "$BONOBOX"/theme/ru/Blue "$RUPLUGINS"/theme/themes/Blue
+	"$CMDCP" -R "$BONOBOX"/theme/ru/SpiritOfBonobo "$RUPLUGINS"/theme/themes/SpiritOfBonobo
+	"$CMDCP" -R "$BONOBOX"/theme/ru/QuickBox-Dark "$RUPLUGINS"/theme/themes/QuickBox-Dark
+	"$CMDGIT" clone --progress https://github.com/themightykitten/ruTorrent-MaterialDesign.git "$RUPLUGINS"/theme/themes/MaterialDesign
+	"$CMDSED" -i "s/Bonobox/RatXaBox/g;" "$RUPLUGINS"/titlebar/init.js
 
 	# configuration thème
-	sed -i "s/defaultTheme = \"\"/defaultTheme = \"QuickBox-Dark\"/g;" "$RUPLUGINS"/theme/conf.php
+	"$CMDSED" -i "s/defaultTheme = \"\"/defaultTheme = \"QuickBox-Dark\"/g;" "$RUPLUGINS"/theme/conf.php
 
-	echo ""; set "148" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDECHO" ""; set "148" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# liens symboliques et permissions
-	ldconfig
-	chown -R "$WDATA" "$RUTORRENT"
-	chmod -R 777 "$RUPLUGINS"/filemanager/scripts
-	chown -R "$WDATA" "$NGINXBASE"
+	"$CMDLDCONFIG"
+	"$CMDCHOWN" -R "$WDATA" "$RUTORRENT"
+	"$CMDCHMOD" -R 777 "$RUPLUGINS"/filemanager/scripts
+	"$CMDCHOWN" -R "$WDATA" "$NGINXBASE"
 
 	# configuration php
-	sed -i "s/2M/10M/g;" "$PHPPATH"/fpm/php.ini
-	sed -i "s/8M/10M/g;" "$PHPPATH"/fpm/php.ini
-	sed -i "s/expose_php = On/expose_php = Off/g;" "$PHPPATH"/fpm/php.ini
+	"$CMDSED" -i "s/2M/10M/g;" "$PHPPATH"/fpm/php.ini
+	"$CMDSED" -i "s/8M/10M/g;" "$PHPPATH"/fpm/php.ini
+	"$CMDSED" -i "s/expose_php = On/expose_php = Off/g;" "$PHPPATH"/fpm/php.ini
 
 	if [ "$GENLANG" = "fr" ]; then
-		sed -i "s/^;date.timezone =/date.timezone = Europe\/Paris/g;" "$PHPPATH"/fpm/php.ini
-		sed -i "s/^;date.timezone =/date.timezone = Europe\/Paris/g;" "$PHPPATH"/cli/php.ini
+		"$CMDSED" -i "s/^;date.timezone =/date.timezone = Europe\/Paris/g;" "$PHPPATH"/fpm/php.ini
+		"$CMDSED" -i "s/^;date.timezone =/date.timezone = Europe\/Paris/g;" "$PHPPATH"/cli/php.ini
 	else
-		sed -i "s/^;date.timezone =/date.timezone = UTC/g;" "$PHPPATH"/fpm/php.ini
-		sed -i "s/^;date.timezone =/date.timezone = UTC/g;" "$PHPPATH"/cli/php.ini
+		"$CMDSED" -i "s/^;date.timezone =/date.timezone = UTC/g;" "$PHPPATH"/fpm/php.ini
+		"$CMDSED" -i "s/^;date.timezone =/date.timezone = UTC/g;" "$PHPPATH"/cli/php.ini
 	fi
 
-	sed -i "s/^;listen.owner = www-data/listen.owner = www-data/g;" "$PHPPATH"/fpm/pool.d/www.conf
-	sed -i "s/^;listen.group = www-data/listen.group = www-data/g;" "$PHPPATH"/fpm/pool.d/www.conf
-	sed -i "s/^;listen.mode = 0660/listen.mode = 0660/g;" "$PHPPATH"/fpm/pool.d/www.conf
-	if [[ $(echo "$VERSION" "9" | awk '{print ($1 >= $2)}') == 1 ]]; then
-		echo "php_admin_value[error_reporting] = E_ALL & ~E_WARNING" >> "$PHPPATH"/fpm/pool.d/www.conf
-	fi
+	"$CMDSED" -i "s/^;listen.owner = www-data/listen.owner = www-data/g;" "$PHPPATH"/fpm/pool.d/www.conf
+	"$CMDSED" -i "s/^;listen.group = www-data/listen.group = www-data/g;" "$PHPPATH"/fpm/pool.d/www.conf
+	"$CMDSED" -i "s/^;listen.mode = 0660/listen.mode = 0660/g;" "$PHPPATH"/fpm/pool.d/www.conf
+	"$CMDECHO" "php_admin_value[error_reporting] = E_ALL & ~E_WARNING" >> "$PHPPATH"/fpm/pool.d/www.conf
 
 	FONCSERVICE restart "$PHPNAME"-fpm
-	echo ""; set "150" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDECHO" ""; set "150" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
-	mkdir -p "$NGINXPASS" "$NGINXSSL"
-	touch "$NGINXPASS"/rutorrent_passwd
-	chmod 640 "$NGINXPASS"/rutorrent_passwd
+	"$CMDMKDIR" -p "$NGINXPASS" "$NGINXSSL"
+	"$CMDTOUCH" "$NGINXPASS"/rutorrent_passwd
+	"$CMDCHMOD" 640 "$NGINXPASS"/rutorrent_passwd
 
 	# configuration serveur web
-	mkdir "$NGINXENABLE"
-	mkdir "$NGINXCONFDRAT"
-	cp -f "$FILES"/nginx/nginx.conf "$NGINX"/nginx.conf
+	"$CMDMKDIR" "$NGINXENABLE"
+	"$CMDMKDIR" "$NGINXCONFDRAT"
+	"$CMDCP" -f "$FILES"/nginx/nginx.conf "$NGINX"/nginx.conf
 	for CONF in 'log_rutorrent.conf' 'ciphers.conf' 'cache.conf' 'php.conf'; do
-		cp -f "$FILES"/nginx/"$CONF" "$NGINXCONFD"/"$CONF"
+		"$CMDCP" -f "$FILES"/nginx/"$CONF" "$NGINXCONFD"/"$CONF"
 	done
-	sed -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php.conf
+	"$CMDSED" -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php.conf
 
-	cp -f "$FILES"/rutorrent/rutorrent.conf "$NGINXENABLE"/rutorrent.conf
+	"$CMDCP" -f "$FILES"/rutorrent/rutorrent.conf "$NGINXENABLE"/rutorrent.conf
 	for VAR in "${!NGINXCONFD@}" "${!NGINXBASE@}" "${!NGINXSSL@}" "${!NGINXPASS@}" "${!NGINXWEB@}" "${!PHPSOCK@}" "${!SBM@}" "${!USER@}"; do
-		sed -i "s|@${VAR}@|${!VAR}|g;" "$NGINXENABLE"/rutorrent.conf
+		"$CMDSED" -i "s|@${VAR}@|${!VAR}|g;" "$NGINXENABLE"/rutorrent.conf
 	done
 
-	if [[ $(echo "$VERSION" "9" | awk '{print ($1 >= $2)}') == 1 ]]; then
-		sed -i "1i\include /etc/nginx/conf.d/log_rutorrent.conf;\n" "$NGINXENABLE"/rutorrent.conf
-		sed -i "s/combined;/combined if=\$loggable;/g;" "$NGINXENABLE"/rutorrent.conf
-	fi
-
-	echo ""; set "152" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDECHO" ""; set "152" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# installation munin
-	sed -i "s/#dbdir[[:blank:]]\/var\/lib\/munin/dbdir \/var\/lib\/munin/g;" /etc/munin/munin.conf
-	sed -i "s|#htmldir[[:blank:]]\/var\/cache\/munin\/www|htmldir $NGINXWEB\/monitoring|g;" /etc/munin/munin.conf
-	sed -i "s/#logdir[[:blank:]]\/var\/log\/munin/logdir \/var\/log\/munin/g;" /etc/munin/munin.conf
-	sed -i "s/#rundir[[:blank:]][[:blank:]]\/var\/run\/munin/rundir \/var\/run\/munin/g;" /etc/munin/munin.conf
-	sed -i "s/#max_size_x[[:blank:]]4000/max_size_x 5000/g;" /etc/munin/munin.conf
-	sed -i "s/#max_size_y[[:blank:]]4000/max_size_x 5000/g;" /etc/munin/munin.conf
+	"$CMDSED" -i "s/#dbdir[[:blank:]]\/var\/lib\/munin/dbdir \/var\/lib\/munin/g;" /etc/munin/munin.conf
+	"$CMDSED" -i "s|#htmldir[[:blank:]]\/var\/cache\/munin\/www|htmldir $NGINXWEB\/monitoring|g;" /etc/munin/munin.conf
+	"$CMDSED" -i "s/#logdir[[:blank:]]\/var\/log\/munin/logdir \/var\/log\/munin/g;" /etc/munin/munin.conf
+	"$CMDSED" -i "s/#rundir[[:blank:]][[:blank:]]\/var\/run\/munin/rundir \/var\/run\/munin/g;" /etc/munin/munin.conf
+	"$CMDSED" -i "s/#max_size_x[[:blank:]]4000/max_size_x 5000/g;" /etc/munin/munin.conf
+	"$CMDSED" -i "s/#max_size_y[[:blank:]]4000/max_size_x 5000/g;" /etc/munin/munin.conf
 
-	mkdir -p "$MUNINROUTE"
-	chown -R munin:munin "$NGINXWEB"/monitoring
+	"$CMDMKDIR" -p "$MUNINROUTE"
+	"$CMDCHOWN" -R munin:munin "$NGINXWEB"/monitoring
 
 	cd "$MUNIN" || exit
 	for RTOM in 'rtom_mem' 'rtom_peers' 'rtom_spdd' 'rtom_vol'; do
-		wget https://raw.github.com/munin-monitoring/contrib/master/plugins/rtorrent/"$RTOM"
+		"$CMDWGET" https://raw.github.com/munin-monitoring/contrib/master/plugins/rtorrent/"$RTOM"
 	done
 
 	FONCMUNIN "$USER" "$PORT"
 
-	cp -R "$BONOBOX"/graph "$GRAPH"
+	"$CMDCP" -R "$BONOBOX"/graph "$GRAPH"
 
-	echo ""; set "154" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDECHO" ""; set "154" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# configuration ssl
-	openssl req -new -x509 -days 3658 -nodes -newkey rsa:2048 -out "$NGINXSSL"/server.crt -keyout "$NGINXSSL"/server.key <<- EOF
+	"$CMDOPENSSL" req -new -x509 -days 3658 -nodes -newkey rsa:2048 -out "$NGINXSSL"/server.crt -keyout "$NGINXSSL"/server.key <<- EOF
 		KP
 		North Korea
 		Pyongyang
@@ -531,62 +533,62 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		contact@wtf.org
 	EOF
 
-	rm -R "${NGINXWEB:?}"/html &> /dev/null
-	rm "$NGINXENABLE"/default &> /dev/null
+	"$CMDRM" -R "${NGINXWEB:?}"/html &> /dev/null
+	"$CMDRM" "$NGINXENABLE"/default &> /dev/null
 
 	# installation seedbox-manager
 	# composer
 	cd /tmp || exit
-	curl -s http://getcomposer.org/installer | php
-	mv /tmp/composer.phar /usr/bin/composer
-	chmod +x /usr/bin/composer
-	echo ""; set "156" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDCURL" -s http://getcomposer.org/installer | "$CMDPHP"
+	"$CMDMV" /tmp/composer.phar /usr/bin/composer
+	"$CMDCHMOD" +x /usr/bin/composer
+	"$CMDECHO" ""; set "156" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# app
 	cd "$NGINXWEB" || exit
-	composer create-project magicalex/seedbox-manager:"$SBMVERSION"
+	"$CMDCOMPOSER" create-project magicalex/seedbox-manager:"$SBMVERSION"
 	cd seedbox-manager || exit
-	touch "$SBM"/sbm_v3
-	chown -R "$WDATA" "$SBM"
+	"$CMDTOUCH" "$SBM"/sbm_v3
+	"$CMDCHOWN" -R "$WDATA" "$SBM"
 	# conf app
 	cd source || exit
-	chmod +x install.sh
+	"$CMDCHMOD" +x install.sh
 	./install.sh
 
-	cp -f "$FILES"/nginx/php-manager.conf "$NGINXCONFD"/php-manager.conf
-	sed -i "s|@SBM@|$SBM|g;" "$NGINXCONFD"/php-manager.conf
-	sed -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php-manager.conf
+	"$CMDCP" -f "$FILES"/nginx/php-manager.conf "$NGINXCONFD"/php-manager.conf
+	"$CMDSED" -i "s|@SBM@|$SBM|g;" "$NGINXCONFD"/php-manager.conf
+	"$CMDSED" -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php-manager.conf
 
 	# conf user
 	cd "$SBMCONFUSER" || exit
-	mkdir "$USER"
-	cp -f "$FILES"/sbm/config-root.ini "$SBMCONFUSER"/"$USER"/config.ini
-	sed -i "s/https:\/\/graph.domaine.fr/..\/graph\/$USER.php/g;" "$SBMCONFUSER"/"$USER"/config.ini
-	sed -i "s/\"\/\"/\"\/home\/$USER\"/g;" "$SBMCONFUSER"/"$USER"/config.ini
-	sed -i "s/RPC1/$USERMAJ/g;" "$SBMCONFUSER"/"$USER"/config.ini
-	sed -i "s/contact@mail.com/$EMAIL/g;" "$SBMCONFUSER"/"$USER"/config.ini
+	"$CMDMKDIR" "$USER"
+	"$CMDCP" -f "$FILES"/sbm/config-root.ini "$SBMCONFUSER"/"$USER"/config.ini
+	"$CMDSED" -i "s/https:\/\/graph.domaine.fr/..\/graph\/$USER.php/g;" "$SBMCONFUSER"/"$USER"/config.ini
+	"$CMDSED" -i "s/\"\/\"/\"\/home\/$USER\"/g;" "$SBMCONFUSER"/"$USER"/config.ini
+	"$CMDSED" -i "s/RPC1/$USERMAJ/g;" "$SBMCONFUSER"/"$USER"/config.ini
+	"$CMDSED" -i "s/contact@mail.com/$EMAIL/g;" "$SBMCONFUSER"/"$USER"/config.ini
 
-	chown -R "$WDATA" "$SBMCONFUSER"
-	echo ""; set "162" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDCHOWN" -R "$WDATA" "$SBMCONFUSER"
+	"$CMDECHO" ""; set "162" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# logrotate
-	cp -f "$FILES"/nginx/logrotate /etc/logrotate.d/nginx
+	"$CMDCP" -f "$FILES"/nginx/logrotate /etc/logrotate.d/nginx
 
 	# script logs html ccze
-	mkdir "$RUTORRENT"/logserver
+	"$CMDMKDIR" "$RUTORRENT"/logserver
 	cd "$SCRIPT" || exit
-	cp -f "$FILES"/scripts/logserver.sh "$SCRIPT"/logserver.sh
-	sed -i "s/@USERMAJ@/$USERMAJ/g;" "$SCRIPT"/logserver.sh
-	sed -i "s|@RUTORRENT@|$RUTORRENT|;" "$SCRIPT"/logserver.sh
-	chmod +x logserver.sh
-	echo ""; set "164" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDCP" -f "$FILES"/scripts/logserver.sh "$SCRIPT"/logserver.sh
+	"$CMDSED" -i "s/@USERMAJ@/$USERMAJ/g;" "$SCRIPT"/logserver.sh
+	"$CMDSED" -i "s|@RUTORRENT@|$RUTORRENT|;" "$SCRIPT"/logserver.sh
+	"$CMDCHMOD" a+x logserver.sh
+	"$CMDECHO" ""; set "164" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# configuration ssh
-	sed -i "s/Subsystem[[:blank:]]sftp[[:blank:]]\/usr\/lib\/openssh\/sftp-server/Subsystem sftp internal-sftp/g;" /etc/ssh/sshd_config
-	sed -i "s/UsePAM/#UsePAM/g;" /etc/ssh/sshd_config
+	"$CMDSED" -i "s/Subsystem[[:blank:]]sftp[[:blank:]]\/usr\/lib\/openssh\/sftp-server/Subsystem sftp internal-sftp/g;" /etc/ssh/sshd_config
+	"$CMDSED" -i "s/UsePAM/#UsePAM/g;" /etc/ssh/sshd_config
 
 	# chroot user
-	cat <<- EOF >> /etc/ssh/sshd_config
+	"$CMDCAT" <<- EOF >> /etc/ssh/sshd_config
 		Match User $USER
 		ChrootDirectory /home/$USER
 	EOF
@@ -595,16 +597,16 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	FONCTORRENTRC "$USER" "$PORT" "$RUTORRENT"
 
 	# torrent welcome
-	cp -f "$FILES"/rutorrent/Welcome.To.RatXaBox.nfo /home/"$USER"/torrents/Welcome.To.RatXaBox.nfo
-	cp -f "$FILES"/rutorrent/Welcome.To.RatXaBox.torrent /home/"$USER"/watch/Welcome.To.RatXaBox.torrent
+	"$CMDCP" -f "$FILES"/rutorrent/Welcome.To.RatXaBox.nfo /home/"$USER"/torrents/Welcome.To.RatXaBox.nfo
+	"$CMDCP" -f "$FILES"/rutorrent/Welcome.To.RatXaBox.torrent /home/"$USER"/watch/Welcome.To.RatXaBox.torrent
 
 	# permissions
-	chown -R "$USER":"$USER" /home/"$USER"
-	chown root:"$USER" /home/"$USER"
-	chmod 755 /home/"$USER"
+	"$CMDCHOWN" -R "$USER":"$USER" /home/"$USER"
+	"$CMDCHOWN" root:"$USER" /home/"$USER"
+	"$CMDCHMOD" 755 /home/"$USER"
 
 	FONCSERVICE restart ssh
-	echo ""; set "166" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDECHO" ""; set "166" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# configuration user rutorrent.conf
 	FONCRTCONF "$USERMAJ"  "$PORT" "$USER"
@@ -613,7 +615,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 
 	# plugins.ini
-	cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
+	"$CMDCP" -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
 
 	# script rtorrent
 	FONCSCRIPTRT "$USER"
@@ -621,30 +623,30 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	FONCSERVICE start "$USER"-irssi
 
 	# mise en place crontab
-	crontab -l > rtorrentdem
+	"$CMDCRONTAB" -l > rtorrentdem
 
-	cat <<- EOF >> rtorrentdem
+	"$CMDCAT" <<- EOF >> rtorrentdem
 		$UPGEOIP 2 9 * * sh $SCRIPT/updateGeoIP.sh > /dev/null 2>&1
 		0 */2 * * * sh $SCRIPT/logserver.sh > /dev/null 2>&1
 		0 5 * * * sh $SCRIPT/backup-session.sh > /dev/null 2>&1
 	EOF
 
-	crontab rtorrentdem
-	rm rtorrentdem
+	"$CMDCRONTAB" rtorrentdem
+	"$CMDRM" rtorrentdem
 
 	# htpasswd
 	FONCHTPASSWD "$USER"
 
-	echo ""; set "168" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDECHO" ""; set "168" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# configuration fail2ban
-	cp -f "$FILES"/fail2ban/nginx-auth.conf /etc/fail2ban/filter.d/nginx-auth.conf
-	cp -f "$FILES"/fail2ban/nginx-badbots.conf /etc/fail2ban/filter.d/nginx-badbots.conf
+	"$CMDCP" -f "$FILES"/fail2ban/nginx-auth.conf /etc/fail2ban/filter.d/nginx-auth.conf
+	"$CMDCP" -f "$FILES"/fail2ban/nginx-badbots.conf /etc/fail2ban/filter.d/nginx-badbots.conf
 
-	cp -f /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
-	sed  -i "/ssh/,+6d" /etc/fail2ban/jail.local
+	"$CMDCP" -f /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+	"$CMDSED"  -i "/ssh/,+6d" /etc/fail2ban/jail.local
 
-	cat <<- EOF >> /etc/fail2ban/jail.local
+	"$CMDCAT" <<- EOF >> /etc/fail2ban/jail.local
 
 		[ssh]
 		enabled  = true
@@ -674,45 +676,41 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	FONCSERVICE restart fail2ban
 
 	# configuration munin pour fai2ban & nginx
-	rm /etc/munin/plugins/fail2ban
-	rm "$MUNIN"/{"fail2ban","nginx_status","nginx_request"}
+	"$CMDRM" /etc/munin/plugins/fail2ban
+	"$CMDRM" "$MUNIN"/{"fail2ban","nginx_status","nginx_request"}
 
 	for PLUGINS in 'fail2ban' 'nginx_connection_request' 'nginx_memory' 'nginx_status' 'nginx_request'; do
-		cp "$FILES"/munin/"$PLUGINS" "$MUNIN"/"$PLUGINS"
-		chmod 755 "$MUNIN"/"$PLUGINS"
-		ln -s "$MUNIN"/"$PLUGINS" /etc/munin/plugins/"$PLUGINS"
+		"$CMDCP" "$FILES"/munin/"$PLUGINS" "$MUNIN"/"$PLUGINS"
+		"$CMDCHMOD" 755 "$MUNIN"/"$PLUGINS"
+		"$CMDLN" -s "$MUNIN"/"$PLUGINS" /etc/munin/plugins/"$PLUGINS"
 	done
 
-	cat <<- EOF >> /etc/munin/plugin-conf.d/munin-node
+	"$CMDCAT" <<- EOF >> /etc/munin/plugin-conf.d/munin-node
 
 		[nginx*]
 		env.url http://localhost/nginx_status
 	EOF
 
 	FONCSERVICE restart munin-node
-	echo ""; set "170" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+	"$CMDECHO" ""; set "170" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 
 	# installation vsftpd
 	if FONCYES "$SERVFTP"; then
-		apt-get install -y vsftpd
-		cp -f "$FILES"/vsftpd/vsftpd.conf /etc/vsftpd.conf
-
-		if [[ "$VERSION" = 7.* ]]; then
-			sed -i "s/seccomp_sandbox=NO/#seccomp_sandbox=NO/g;" /etc/vsftpd.conf
-		fi
+		"$CMDAPTGET" install -y vsftpd
+		"$CMDCP" -f "$FILES"/vsftpd/vsftpd.conf /etc/vsftpd.conf
 
 		# récupèration certificats nginx
-		cp -f "$NGINXSSL"/server.crt  /etc/ssl/private/vsftpd.cert.pem
-		cp -f "$NGINXSSL"/server.key  /etc/ssl/private/vsftpd.key.pem
+		"$CMDCP" -f "$NGINXSSL"/server.crt  /etc/ssl/private/vsftpd.cert.pem
+		"$CMDCP" -f "$NGINXSSL"/server.key  /etc/ssl/private/vsftpd.key.pem
 
-		touch /etc/vsftpd.chroot_list
-		touch /var/log/vsftpd.log
-		chmod 600 /var/log/vsftpd.log
+		"$CMDTOUCH" /etc/vsftpd.chroot_list
+		"$CMDTOUCH" /var/log/vsftpd.log
+		"$CMDCHMOD" 600 /var/log/vsftpd.log
 		FONCSERVICE restart vsftpd
 
-		sed  -i "/vsftpd/,+10d" /etc/fail2ban/jail.local
+		"$CMDSED"  -i "/vsftpd/,+10d" /etc/fail2ban/jail.local
 
-		cat <<- EOF >> /etc/fail2ban/jail.local
+		"$CMDCAT" <<- EOF >> /etc/fail2ban/jail.local
 
 			[vsftpd]
 			enabled  = true
@@ -728,49 +726,49 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		EOF
 
 		FONCSERVICE restart fail2ban
-		echo ""; set "172" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+		"$CMDECHO" ""; set "172" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 	fi
 
 	# déplacement clé 2048 bits
-	cp -f /tmp/dhparams.pem "$NGINXSSL"/dhparams.pem
-	chmod 600 "$NGINXSSL"/dhparams.pem
+	"$CMDCP" -f /tmp/dhparams.pem "$NGINXSSL"/dhparams.pem
+	"$CMDCHMOD" 600 "$NGINXSSL"/dhparams.pem
 	FONCSERVICE restart nginx
 	# contrôle clé 2048 bits
 	if [ ! -f "$NGINXSSL"/dhparams.pem ]; then
-		kill -HUP "$(pgrep -x openssl)"
-		echo ""; set "174"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
-		set "176"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"; echo ""
+		"$CMDKILL" -HUP "$("$CMDPGREP" -x openssl)"
+		"$CMDECHO" ""; set "174"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}"
+		set "176"; FONCTXT "$1"; "$CMDECHO" -e "${CRED}$TXT1${CEND}"; "$CMDECHO" ""
 		cd "$NGINXSSL" || exit
-		openssl dhparam -out dhparams.pem 2048
-		chmod 600 dhparams.pem
+		"$CMDOPENSSL" dhparam -out dhparams.pem 2048
+		"$CMDCHMOD" 600 dhparams.pem
 		FONCSERVICE restart nginx
-		echo ""; set "178" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
+		"$CMDECHO" ""; set "178" "134"; FONCTXT "$1" "$2"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; "$CMDECHO" ""
 	fi
 
 	# configuration page index munin
 	FONCGRAPH "$USER"
 
 	# log users
-	echo "maillog">> "$RUTORRENT"/histo.log
-	echo "userlog">> "$RUTORRENT"/histo.log
-	sed -i "s/maillog/$EMAIL/g;" "$RUTORRENT"/histo.log
-	sed -i "s/userlog/$USER:5001/g;" "$RUTORRENT"/histo.log
+	"$CMDECHO" "maillog">> "$RUTORRENT"/"$HISTOLOG".log
+	"$CMDECHO" "userlog">> "$RUTORRENT"/"$HISTOLOG".log
+	"$CMDSED" -i "s/maillog/$EMAIL/g;" "$RUTORRENT"/"$HISTOLOG".log
+	"$CMDSED" -i "s/userlog/$USER:5001/g;" "$RUTORRENT"/"$HISTOLOG".log
 
 	# ratxabox
-	echo "ne pas supprimer">> "$RUTORRENT"/ratxabox9.txt
+	"$CMDECHO" "ne pas supprimer">> "$RUTORRENT"/ratxabox9.txt
 
-	set "180"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
+	set "180"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}"
 	if [ ! -f "$ARGFILE" ]; then
-		echo ""; set "182"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1${CEND}"
-		set "184"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND}"
-		set "186"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}${PASSNGINX}${CEND}"
-		set "188"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1${CEND}"; echo ""
+		"$CMDECHO" ""; set "182"; FONCTXT "$1"; "$CMDECHO" -e "${CGREEN}$TXT1${CEND}"
+		set "184"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND}"
+		set "186"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND} ${CYELLOW}${PASSNGINX}${CEND}"
+		set "188"; FONCTXT "$1"; "$CMDECHO" -e "${CGREEN}$TXT1${CEND}"; "$CMDECHO" ""
 	fi
 
 	# ajout utilisateur supplémentaire
 	while :; do
 		if [ ! -f "$ARGFILE" ]; then
-			set "190"; FONCTXT "$1"; echo -n -e "${CGREEN}$TXT1 ${CEND}"
+			set "190"; FONCTXT "$1"; "$CMDECHO" -n -e "${CGREEN}$TXT1 ${CEND}"
 			read -r REPONSE
 		else
 			if [ -s "$ARGFILE" ]; then
@@ -782,57 +780,57 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 		if FONCNO "$REPONSE"; then
 			# fin d'installation
-			echo ""; set "192"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
-			CLEANPASS="$(grep 182 "$BONOBOX"/lang/"$GENLANG".lang | cut -c5- | sed "s/.$//")"
-			sed -i "/$CLEANPASS/,+4d" /tmp/install.log
-			cp -f /tmp/install.log "$RUTORRENT"/install.log
-			sh "$SCRIPT"/logserver.sh
-			ccze -h < "$RUTORRENT"/install.log > "$RUTORRENT"/install.html
-			true > /var/log/nginx/rutorrent-error.log
+			"$CMDECHO" ""; set "192"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}"
+			CLEANPASS="$("$CMDGREP" 182 "$BONOBOX"/lang/"$GENLANG".lang | "$CMDCUT" -c5- | "$CMDSED" "s/.$//")"
+			"$CMDSED" -i "/$CLEANPASS/,+4d" /tmp/install.log
+			"$CMDCP" -f /tmp/install.log "$RUTORRENT"/install.log
+			"$CMDBASH" "$SCRIPT"/logserver.sh
+			"$CMDPV" -f "$RUTORRENT"/install.log | "$CMDCCZE" -h > "$RUTORRENT"/install.html
+			"$CMDTRUE" > /var/log/nginx/rutorrent-error.log
 			if [ -z "$ARGREBOOT" ]; then
-				echo ""; set "194"; FONCTXT "$1"; echo -n -e "${CGREEN}$TXT1 ${CEND}"
+				"$CMDECHO" ""; set "194"; FONCTXT "$1"; "$CMDECHO" -n -e "${CGREEN}$TXT1 ${CEND}"
 				read -r REBOOT
 			else
 				if [ "$ARGREBOOT" = "reboot-off" ]; then
 					break
 				else
-					reboot
+					"$CMDSYSTEMCTL" reboot
 					break
 				fi
 			fi
 
 			if FONCNO "$REBOOT"; then
-				echo ""; set "196"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
-				echo -e "${CYELLOW}https://$IP/rutorrent/install.html${CEND}"
-				echo ""; set "200"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"
-				echo ""; set "202"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
-				echo -e "${CYELLOW}https://$IP/rutorrent/${CEND}"
-				echo ""; set "206"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
-				echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}"
-				echo ""; echo ""; set "210"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
-				echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}"; echo ""
+				"$CMDECHO" ""; set "196"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}"
+				"$CMDECHO" -e "${CYELLOW}https://$IP/rutorrent/install.html${CEND}"
+				"$CMDECHO" ""; set "200"; FONCTXT "$1"; "$CMDECHO" -e "${CRED}$TXT1${CEND}"
+				"$CMDECHO" ""; set "202"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}"
+				"$CMDECHO" -e "${CYELLOW}https://$IP/rutorrent/${CEND}"
+				"$CMDECHO" ""; set "206"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}"
+				"$CMDECHO" -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}"
+				"$CMDECHO" ""; "$CMDECHO" ""; set "210"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}"
+				"$CMDECHO" -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}"; "$CMDECHO" ""
 				break
 			fi
 
 			if FONCYES "$REBOOT"; then
-				echo ""; set "196"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
-				echo -e "${CYELLOW}https://$IP/rutorrent/install.html${CEND}"
-				echo ""; set "202"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
-				echo -e "${CYELLOW}https://$IP/rutorrent/${CEND}"
-				echo ""; set "206"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
-				echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}"
-				echo ""; echo ""; set "210"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
-				echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}"; echo ""
-				reboot
+				"$CMDECHO" ""; set "196"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}"
+				"$CMDECHO" -e "${CYELLOW}https://$IP/rutorrent/install.html${CEND}"
+				"$CMDECHO" ""; set "202"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}"
+				"$CMDECHO" -e "${CYELLOW}https://$IP/rutorrent/${CEND}"
+				"$CMDECHO" ""; set "206"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}"
+				"$CMDECHO" -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}"
+				"$CMDECHO" ""; "$CMDECHO" ""; set "210"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}"
+				"$CMDECHO" -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}"; "$CMDECHO" ""
+				"$CMDSYSTEMCTL" reboot
 				break
 			fi
 		fi
 
 		if FONCYES "$REPONSE"; then
 			if [ ! -s "$ARGFILE" ]; then
-				echo ""
+				"$CMDECHO" ""
 				FONCUSER # demande nom user
-				echo ""
+				"$CMDECHO" ""
 				FONCPASS # demande mot de passe
 			else
 				FONCARG
@@ -845,26 +843,26 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			PASSNGINX=${USERPWD}
 
 			# ajout utilisateur
-			useradd -M -s /bin/bash "$USER"
+			"$CMDUSERADD" -M -s /bin/bash "$USER"
 
 			# création mot de passe utilisateur
-			echo "${USER}:${USERPWD}" | chpasswd
+			"$CMDECHO" "${USER}:${USERPWD}" | "$CMDCHPASSWD"
 
 			# anti-bug /home/user déjà existant
-			mkdir -p /home/"$USER"
-			chown -R "$USER":"$USER" /home/"$USER"
+			"$CMDMKDIR" -p /home/"$USER"
+			"$CMDCHOWN" -R "$USER":"$USER" /home/"$USER"
 
 			# variable utilisateur majuscule
-			USERMAJ=$(echo "$USER" | tr "[:lower:]" "[:upper:]")
+			USERMAJ=$("$CMDECHO" "$USER" | "$CMDTR" "[:lower:]" "[:upper:]")
 
 			# variable mail
-			EMAIL=$(sed -n "1 p" "$RUTORRENT"/histo.log)
+			EMAIL=$("$CMDSED" -n "1 p" "$RUTORRENT"/"$HISTOLOG".log)
 
 			# création de dossier
-			su "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session ~/.backup-session'
+			"$CMDSU" "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session ~/.backup-session'
 
 			# calcul port
-			FONCPORT "$RUTORRENT" 5001
+			FONCPORT
 
 			# configuration munin
 			FONCMUNIN "$USER" "$PORT"
@@ -873,24 +871,24 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			FONCTORRENTRC "$USER" "$PORT" "$RUTORRENT"
 
 			# configuration user rutorrent.conf
-			sed -i '$d' "$NGINXENABLE"/rutorrent.conf
+			"$CMDSED" -i '$d' "$NGINXENABLE"/rutorrent.conf
 			FONCRTCONF "$USERMAJ"  "$PORT" "$USER"
 
 			# logserver user config
-			sed -i '$d' "$SCRIPT"/logserver.sh
-			echo "sed -i '/@USERMAJ@\ HTTP/d' access.log" >> "$SCRIPT"/logserver.sh
-			sed -i "s/@USERMAJ@/$USERMAJ/g;" "$SCRIPT"/logserver.sh
-			echo "ccze -h < /tmp/access.log > $RUTORRENT/logserver/access.html" >> "$SCRIPT"/logserver.sh
+			"$CMDSED" -i '$d' "$SCRIPT"/logserver.sh
+			"$CMDECHO" "\"\$CMDSED\" -i '/@USERMAJ@\ HTTP/d' access.log" >> "$SCRIPT"/logserver.sh
+			"$CMDSED" -i "s/@USERMAJ@/$USERMAJ/g;" "$SCRIPT"/logserver.sh
+			"$CMDECHO" "\"\$CMDCCZE\" -h < /tmp/access.log > $RUTORRENT/logserver/access.html" >> "$SCRIPT"/logserver.sh
 
 			# configuration script bakup .session
 			FONCBAKSESSION
 
 			# config.php
-			mkdir "$RUCONFUSER"/"$USER"
+			"$CMDMKDIR" "$RUCONFUSER"/"$USER"
 			FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 
 			# chroot user supplèmentaire
-			cat <<- EOF >> /etc/ssh/sshd_config
+			"$CMDCAT" <<- EOF >> /etc/ssh/sshd_config
 				Match User $USER
 				ChrootDirectory /home/$USER
 			EOF
@@ -899,17 +897,17 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 			# configuration user seedbox-manager
 			cd "$SBMCONFUSER" || exit
-			mkdir "$USER"
-			cp -f "$FILES"/sbm/config-user.ini "$SBMCONFUSER"/"$USER"/config.ini
-			sed -i "s/\"\/\"/\"\/home\/$USER\"/g;" "$SBMCONFUSER"/"$USER"/config.ini
-			sed -i "s/https:\/\/graph.domaine.fr/..\/graph\/$USER.php/g;" "$SBMCONFUSER"/"$USER"/config.ini
-			sed -i "s/RPC1/$USERMAJ/g;" "$SBMCONFUSER"/"$USER"/config.ini
-			sed -i "s/contact@mail.com/$EMAIL/g;" "$SBMCONFUSER"/"$USER"/config.ini
+			"$CMDMKDIR" "$USER"
+			"$CMDCP" -f "$FILES"/sbm/config-user.ini "$SBMCONFUSER"/"$USER"/config.ini
+			"$CMDSED" -i "s/\"\/\"/\"\/home\/$USER\"/g;" "$SBMCONFUSER"/"$USER"/config.ini
+			"$CMDSED" -i "s/https:\/\/graph.domaine.fr/..\/graph\/$USER.php/g;" "$SBMCONFUSER"/"$USER"/config.ini
+			"$CMDSED" -i "s/RPC1/$USERMAJ/g;" "$SBMCONFUSER"/"$USER"/config.ini
+			"$CMDSED" -i "s/contact@mail.com/$EMAIL/g;" "$SBMCONFUSER"/"$USER"/config.ini
 
 			# plugins.ini
-			cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
+			"$CMDCP" -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
 
-			cat <<- EOF >> "$RUCONFUSER"/"$USER"/plugins.ini
+			"$CMDCAT" <<- EOF >> "$RUCONFUSER"/"$USER"/plugins.ini
 				[linklogs]
 				enabled = no
 			EOF
@@ -918,11 +916,11 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			FONCIRSSI "$USER" "$PORT" "$USERPWD"
 
 			# permissions
-			chown -R "$WDATA" "$SBMCONFUSER"
-			chown -R "$WDATA" "$RUTORRENT"
-			chown -R "$USER":"$USER" /home/"$USER"
-			chown root:"$USER" /home/"$USER"
-			chmod 755 /home/"$USER"
+			"$CMDCHOWN" -R "$WDATA" "$SBMCONFUSER"
+			"$CMDCHOWN" -R "$WDATA" "$RUTORRENT"
+			"$CMDCHOWN" -R "$USER":"$USER" /home/"$USER"
+			"$CMDCHOWN" root:"$USER" /home/"$USER"
+			"$CMDCHMOD" 755 /home/"$USER"
 
 			# script rtorrent
 			FONCSCRIPTRT "$USER"
@@ -937,20 +935,20 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			FONCSERVICE restart nginx
 
 			# log users
-			echo "userlog">> "$RUTORRENT"/histo.log
-			sed -i "s/userlog/$USER:$PORT/g;" "$RUTORRENT"/histo.log
+			"$CMDECHO" "userlog">> "$RUTORRENT"/"$HISTOLOG".log
+			"$CMDSED" -i "s/userlog/$USER:$PORT/g;" "$RUTORRENT"/"$HISTOLOG".log
 			if [ ! -f "$ARGFILE" ]; then
-				echo ""; set "218"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"; echo ""
-				set "182"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1${CEND}"
-				set "184"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND}"
-				set "186"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}${PASSNGINX}${CEND}"
-				set "188"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1${CEND}"; echo ""
+				"$CMDECHO" ""; set "218"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND}"; "$CMDECHO" ""
+				set "182"; FONCTXT "$1"; "$CMDECHO" -e "${CGREEN}$TXT1${CEND}"
+				set "184"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND}"
+				set "186"; FONCTXT "$1"; "$CMDECHO" -e "${CBLUE}$TXT1${CEND} ${CYELLOW}${PASSNGINX}${CEND}"
+				set "188"; FONCTXT "$1"; "$CMDECHO" -e "${CGREEN}$TXT1${CEND}"; "$CMDECHO" ""
 			fi
 		fi
 	done
 else
 	# lancement lancement gestion des utilisateurs
-	chmod +x ./gestion-users.sh
+	"$CMDCHMOD" +x ./gestion-users.sh
 	# shellcheck source=/dev/null
 	source ./gestion-users.sh
 fi
