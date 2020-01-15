@@ -373,10 +373,18 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	"$CMDPIP" install cloudscraper
 
 	# configuration geoip2
-	"$CMDWGET" https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz
-	"$CMDTAR" xzfv GeoLite2-City.tar.gz
-	cd /tmp/GeoLite2-City_* || exit
-	"$CMDMV" GeoLite2-City.mmdb "$RUPLUGINS"/geoip2/database/GeoLite2-City.mmdb
+	cd "$RUPLUGINS"/geoip2/database || exit
+
+	for DATABASE in *.tar.gz; do
+		"$CMDTAR" xzfv "$DATABASE"
+	done
+
+	"$CMDRM" -R GeoLite2-City.mmdb.tar.gz GeoLite2-Country.mmdb.tar.gz
+
+	#"$CMDWGET" https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz
+	#"$CMDTAR" xzfv GeoLite2-City.tar.gz
+	#cd /tmp/GeoLite2-City_* || exit
+	#"$CMDMV" GeoLite2-City.mmdb "$RUPLUGINS"/geoip2/database/GeoLite2-City.mmdb
 
 	# configuration filemanager
 	"$CMDCP" -f "$FILES"/rutorrent/filemanager.conf "$RUPLUGINS"/filemanager/conf.php
@@ -429,8 +437,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 	cd "$SCRIPT" || exit
 
-	for COPY in 'updateGeoIP.sh' 'backup-session.sh'
-	do
+	for COPY in 'updateGeoIP.sh' 'backup-session.sh'; do
 		"$CMDCP" -f "$FILES"/scripts/"$COPY" "$SCRIPT"/"$COPY"
 		"$CMDCHMOD" a+x "$COPY"
 	done
@@ -626,7 +633,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	"$CMDCRONTAB" -l > rtorrentdem
 
 	"$CMDCAT" <<- EOF >> rtorrentdem
-		$UPGEOIP 2 9 * * $CMDBASH $SCRIPT/updateGeoIP.sh > /dev/null 2>&1
+		#$UPGEOIP 2 9 * * $CMDBASH $SCRIPT/updateGeoIP.sh > /dev/null 2>&1
 		0 */2 * * * $CMDBASH $SCRIPT/logserver.sh > /dev/null 2>&1
 		0 5 * * * $CMDBASH $SCRIPT/backup-session.sh > /dev/null 2>&1
 	EOF
